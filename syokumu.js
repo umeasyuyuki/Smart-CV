@@ -1,7 +1,7 @@
 /***************************************************
  * (A) 連携先URLなどの設定 (例：実際には適宜修正)
  ***************************************************/
-const scriptURL = "https://script.google.com/macros/s/AKfycb.../exec";   // Google Apps Scriptなど
+const scriptURL = "https://script.google.com/macros/u/2/s/AKfycbzJCzE2eCpXSnKWU0Q3papybktyrrQV3h74tD0yZyHwTPwmkFZPwXJvGCzHhoXaH3dNOg/exec";   // Google Apps Scriptなど
 const difyUploadURL = "https://api.dify.ai/v1/files/upload";             // 例
 const difyAPIKey = "app-nec0NdADJDdpecQKQYvtxzmD";                        // ダミーキー
 

@@ -82,40 +82,26 @@ async function handleBulkGenerate() {
     formData.append("file", selectedFile);
 
     // 例：Dify APIに送る場合
+    // こちらもレスポンスを読みたいなら CORS 対応必須なので、
+    // サーバーが Access-Control-Allow-Origin を返せないなら no-cors にするしかない。
     const response = await fetch(difyUploadURL, {
       method: "POST",
-      mode: "cors", // ← 追加
-      headers: { "x-api-key": difyAPIKey },
+      mode: "no-cors", // CORSヘッダーなしで送る場合 (レスポンス読めません)
+      headers: {
+        "x-api-key": difyAPIKey,
+        // "Content-Type": "multipart/form-data", 
+        // ↑ FormData 送信時は通常Content-Typeは自動設定されるので指定不要です
+      },
       body: formData,
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error("Difyへの送信に失敗: " + errText);
-    }
+    // no-cors だと response.ok などもチェックできず常に opaque になるので、
+    // 例外処理や結果取得はできません。以下は実質無意味になりますが残しておきます。
+    console.log("[DEBUG] Difyに送信完了(レスポンスは取得不可)");
 
-    const result = await response.json();
-    console.log("[DEBUG] Dify解析結果:", result);
-
-    // APIの応答をフォームに反映（例）
-    if (result.fileURL) {
-      uploadedFileURL = result.fileURL;
-    }
-    if (result.name) {
-      document.getElementById("input-name").value = result.name;
-    }
-    if (result.tel) {
-      document.getElementById("input-tel").value = result.tel;
-    }
-    if (result.mail) {
-      document.getElementById("input-mail").value = result.mail;
-    }
-    if (result.summary) {
-      document.getElementById("input-summary").value = result.summary;
-    }
-
-    updatePreviewPages();
-    alert("Dify解析結果をフォームに反映しました。");
+    // 仮に結果をフォームに反映したい場合はサーバー側のCORS対応が必須です。
+    // ここでは割愛。
+    alert("ファイル送信が完了しました（レスポンスは取得できません）。");
   } catch (error) {
     console.error("[DEBUG] handleBulkGenerate error:", error);
     alert("エラーが発生しました: " + error.message);
@@ -631,15 +617,20 @@ async function handleDownloadPDF() {
     tel: docVal("input-tel"),
     mail: docVal("input-mail"),
   };
+
   try {
-    const response = await fetch(scriptURL, {
+    // no-cors であれば応答は取れない
+    await fetch(scriptURL, {
       method: "POST",
-      mode: "cors", // ← 追加
-      headers: { "Content-Type": "text/plain" },
+      mode: "no-cors", // ← CORSヘッダーなしの場合、こうしないとエラー
+      headers: {
+        "Content-Type": "text/plain",
+      },
       body: JSON.stringify(sendData),
     });
-    const resultText = await response.text();
-    console.log("[DEBUG] スプレッドシート送信結果:", resultText);
+
+    // ここで response.text() 等を呼ぶとエラーになるため省略
+    console.log("[DEBUG] スプレッドシート送信完了(応答は取得不能)");
   } catch (e) {
     console.error("[DEBUG] 送信エラー:", e);
   }
@@ -661,6 +652,6 @@ async function handleDownloadPDF() {
     pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, imgHeightInPdf);
   }
   pdf.save("職務経歴書.pdf");
-  alert("PDFダウンロードが開始されました！");
+  alert("PDFダウンロードが開始されました！（GASからのレスポンスは取得できません）");
   console.log("[DEBUG] PDF download complete.");
 }

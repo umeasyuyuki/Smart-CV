@@ -71,6 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /***************************************************
  * (D) 一括生成する (例：API解析)
+ *     ※ Dify API側がCORS許可していない場合はエラーになる可能性があります
  ***************************************************/
 async function handleBulkGenerate() {
   if (!selectedFile) {
@@ -81,27 +82,42 @@ async function handleBulkGenerate() {
     const formData = new FormData();
     formData.append("file", selectedFile);
 
-    // 例：Dify APIに送る場合
-    // こちらもレスポンスを読みたいなら CORS 対応必須なので、
-    // サーバーが Access-Control-Allow-Origin を返せないなら no-cors にするしかない。
+    // 例：Dify APIに送る場合（CORS対応していないとブラウザでブロックされるかも）
     const response = await fetch(difyUploadURL, {
       method: "POST",
-      mode: "no-cors", // CORSヘッダーなしで送る場合 (レスポンス読めません)
-      headers: {
-        "x-api-key": difyAPIKey,
-        // "Content-Type": "multipart/form-data", 
-        // ↑ FormData 送信時は通常Content-Typeは自動設定されるので指定不要です
-      },
+      // mode: "cors", // ← DifyがCORS許可ならこれ
+      // もしCORS未対応なら "no-cors" にするが、結果を受け取れなくなるので注意
+      headers: { "x-api-key": difyAPIKey },
       body: formData,
     });
 
-    // no-cors だと response.ok などもチェックできず常に opaque になるので、
-    // 例外処理や結果取得はできません。以下は実質無意味になりますが残しておきます。
-    console.log("[DEBUG] Difyに送信完了(レスポンスは取得不可)");
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error("Difyへの送信に失敗: " + errText);
+    }
 
-    // 仮に結果をフォームに反映したい場合はサーバー側のCORS対応が必須です。
-    // ここでは割愛。
-    alert("ファイル送信が完了しました（レスポンスは取得できません）。");
+    const result = await response.json();
+    console.log("[DEBUG] Dify解析結果:", result);
+
+    // APIの応答をフォームに反映（例）
+    if (result.fileURL) {
+      uploadedFileURL = result.fileURL;
+    }
+    if (result.name) {
+      document.getElementById("input-name").value = result.name;
+    }
+    if (result.tel) {
+      document.getElementById("input-tel").value = result.tel;
+    }
+    if (result.mail) {
+      document.getElementById("input-mail").value = result.mail;
+    }
+    if (result.summary) {
+      document.getElementById("input-summary").value = result.summary;
+    }
+
+    updatePreviewPages();
+    alert("Dify解析結果をフォームに反映しました。");
   } catch (error) {
     console.error("[DEBUG] handleBulkGenerate error:", error);
     alert("エラーが発生しました: " + error.message);
@@ -177,7 +193,6 @@ function setupBindings() {
  * (F+) ★ テーブルの上線だけ消す関数を追加 ★
  ***************************************************/
 function removeTableTopLine(wrapperElem) {
-  // wrapperElem 内のすべてのテーブルに対し border-top を消す
   const tables = wrapperElem.querySelectorAll("table");
   tables.forEach((table) => {
     table.style.borderTop = "none";
@@ -195,7 +210,6 @@ function setupAddRemoveCareer() {
   const container = document.getElementById("career-container");
   const firstBlock = document.getElementById("career-first");
 
-  // 初期ブロックでもテーブル上線を消す
   removeTableTopLine(firstBlock);
 
   if (addBtn) {
@@ -210,7 +224,6 @@ function setupAddRemoveCareer() {
         elem.addEventListener("input", updatePreviewPages);
       });
 
-      // sub-sectionラッパ
       let wrapper = document.createElement("div");
       wrapper.className = "sub-section";
       wrapper.style.borderTop = "1px solid #000";
@@ -220,8 +233,6 @@ function setupAddRemoveCareer() {
 
       wrapper.appendChild(clone);
       container.appendChild(wrapper);
-
-      // 追加されたブロック内のテーブル上線を消す
       removeTableTopLine(wrapper);
 
       updatePreviewPages();
@@ -234,7 +245,6 @@ function setupAddRemoveCareer() {
         container.removeChild(container.lastElementChild);
         careerCount--;
       } else {
-        // 1つしかない場合は入力リセットのみ
         firstBlock.querySelectorAll('[id^="career1-"]').forEach((elem) => {
           elem.value = "";
         });
@@ -252,7 +262,6 @@ function setupAddRemoveLicense() {
   const licenseContainer = document.getElementById("license-container");
   const firstLicense = document.getElementById("license-first");
 
-  // 初期ブロックでもテーブル上線を消す
   removeTableTopLine(firstLicense);
 
   if (addBtn) {
@@ -274,8 +283,6 @@ function setupAddRemoveLicense() {
 
       wrapper.appendChild(clone);
       licenseContainer.appendChild(wrapper);
-
-      // 追加ブロックでもテーブル上線を消す
       removeTableTopLine(wrapper);
 
       updatePreviewPages();
@@ -304,7 +311,6 @@ function setupAddRemoveLang() {
   const langContainer = document.getElementById("lang-container");
   const firstLang = document.getElementById("lang-first");
 
-  // 初期ブロックでもテーブル上線を消す
   removeTableTopLine(firstLang);
 
   if (!addBtn || !removeBtn || !langContainer || !firstLang) return;
@@ -327,8 +333,6 @@ function setupAddRemoveLang() {
 
     wrapper.appendChild(clone);
     langContainer.appendChild(wrapper);
-
-    // 追加ブロックでもテーブル上線を消す
     removeTableTopLine(wrapper);
 
     updatePreviewPages();
@@ -355,7 +359,6 @@ function updatePreviewPages() {
   if (!wrap) return;
   wrap.innerHTML = "";
 
-  // ページを作成
   function createNewPage() {
     const page = document.createElement("div");
     page.className = "resume-page";
@@ -427,7 +430,9 @@ function updatePreviewPages() {
     block.textContent = text;
     if (isOverflowAfterAppend(currentPage, block)) {
       currentPage = createNewPage();
-      currentPage.appendChild(makeSectionTitle("活かせる経験・知識・技術"));
+      currentPage.appendChild(
+        makeSectionTitle("活かせる経験・知識・技術")
+      );
     }
     currentPage.appendChild(block);
   }
@@ -610,27 +615,30 @@ function isOverflowAfterAppend(pageElem, blockElem) {
 async function handleDownloadPDF() {
   console.log("[DEBUG] handleDownloadPDF: start...");
 
-  // 例: GASへ送信
+  // ▼ ここで送信するデータは、GAS 側 doPost(e) が期待しているキーに合わせる
+  //    (「phone」「email」など)
   const sendData = {
     createdDate: window.currentDateString || "",
     name: docVal("input-name"),
-    tel: docVal("input-tel"),
-    mail: docVal("input-mail"),
+    phone: docVal("input-tel"),       // GAS側で data.phone として受け取る
+    email: docVal("input-mail"),      // GAS側で data.email として受け取る
+    gender: "",                       // 必要なら docVal("input-gender") 等に
+    age: "",                          // 必要なら docVal("input-age") 等に
+    address: ""                       // 必要なら docVal("input-address") 等に
   };
 
   try {
-    // no-cors であれば応答は取れない
+    // ★ no-cors であればサーバーの応答は取得できませんが、
+    //   GAS 側を一切修正しなくてもリクエストを送ることは可能です。
     await fetch(scriptURL, {
       method: "POST",
-      mode: "no-cors", // ← CORSヘッダーなしの場合、こうしないとエラー
+      mode: "no-cors", // ← CORS ヘッダーなしでも送れる
       headers: {
         "Content-Type": "text/plain",
       },
       body: JSON.stringify(sendData),
     });
-
-    // ここで response.text() 等を呼ぶとエラーになるため省略
-    console.log("[DEBUG] スプレッドシート送信完了(応答は取得不能)");
+    console.log("[DEBUG] スプレッドシート送信完了(応答は取得不可)");
   } catch (e) {
     console.error("[DEBUG] 送信エラー:", e);
   }
@@ -652,6 +660,6 @@ async function handleDownloadPDF() {
     pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, imgHeightInPdf);
   }
   pdf.save("職務経歴書.pdf");
-  alert("PDFダウンロードが開始されました！（GASからのレスポンスは取得できません）");
+  alert("PDFダウンロードが開始されました！（GAS の応答は取得できません）");
   console.log("[DEBUG] PDF download complete.");
 }

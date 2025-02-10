@@ -593,10 +593,10 @@ document.getElementById("pdf-save-btn").addEventListener("click", async () => {
     });
     const resultText = await response.text();
     console.log("GAS送信結果:", resultText);
-    alert("GAS送信が完了しました: " + resultText);
+    alert("履歴書が完成しました: " + resultText);
   } catch (e) {
     console.error("GAS送信エラー:", e);
-    alert("GAS送信中にエラーが発生しました");
+    alert("エラーが発生しました");
   }
 
   // PDF生成

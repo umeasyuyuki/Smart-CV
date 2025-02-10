@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <!-- 重要：幅を1400pxに固定し、画面が狭い場合は横スクロール -->
+  <meta name="viewport" content="width=1400, initial-scale=1.0">
+  
+  <title>左右分割：リアルタイム履歴書フォーム＋PDF保存（固定幅版）</title>
+
+  <!-- Google Fonts（例） -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Istok+Web&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- 外部CSSの読み込み -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- html2canvas, jsPDF の読み込み -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<!-- 全体コンテナ：幅1400px固定 -->
+<div class="container">
+
+  <!-- 左カラム：フォーム -->
+  <div class="left">
+    <div class="header-left">
+      <h1>
+        <span class="smart">Smart</span>
+        <span class="dash">-</span>
+        <span class="cv">CV</span>
+      </h1>
+      <h2>[完全無料] 履歴書・職務経歴書自動作成サービス</h2>
+    </div>
+
+    <table class="choice-box">
+      <td>
+        <strong>
+          既に経歴書をお持ちの方は、➀にお進みください（予想作成時間３０秒）<br />
+          お持ちでない方は、②にお進みください。（予想作成時間５分）
+        </strong>
+      </td>
+    </table>
+
+    <table class="first-box">
+      <td>
+        <strong>➀に当てはまる方は、以下の項目への入力をお願いします。</strong>
+      </td>
+    </table>
+
+    <!-- アップロード -->
+    <div class="form-group upload-wrapper">
+      <label for="resume-file" class="upload-label">
+        1. 経歴書などをお持ちの場合アップロードしてください。
+      </label>
+      <div class="upload-area" onclick="document.getElementById('resume-file').click()">
+        <p class="upload-text">
+          PDFもしくは、docs形式のデータをアップロードしてください。
+        </p>
+      </div>
+      <input
+        type="file"
+        id="resume-file"
+        accept=".pdf,.doc,.docx"
+        style="display: none"
+      />
+    </div>
+
+    <!-- 追加情報 -->
+    <div class="form-group">
+      <label for="additional-info">
+        2. 追加したい情報がある場合記入してください。
+      </label>
+      <textarea id="additional-info" placeholder="" rows="3"></textarea>
+    </div>
+    <button id="bulk-generate-btn" class="btn btn-primary">
+      一括生成する
+    </button>
+
+    <table class="second-box">
+      <td>
+        <strong>②に当てはまる方は、以下の項目への入力をお願いします。</strong>
+      </td>
+    </table>
+
+    <!-- 名前・ふりがな -->
+    <div class="section-title">情報</div>
+    <div class="row-inline">
+      <div class="form-group name-group">
+        <label for="input-name">名前</label>
+        <input type="text" id="input-name" placeholder="" />
+      </div>
+      <div class="form-group furigana-group">
+        <label for="input-furigana">ふりがな</label>
+        <input type="text" id="input-furigana" placeholder="" />
+      </div>
+    </div>
+
+    <!-- 生年月日 -->
+    <div class="birthday-box">
+      <label>生年月日</label>
+      <div class="birthday-container">
+        <select id="birth-year" class="year-month-select">
+          <option value="">--</option>
+        </select>
+        <span>年</span>
+        <select id="birth-month" class="year-month-select">
+          <option value="">--</option>
+        </select>
+        <span>月</span>
+        <select id="birth-day" class="day-age-select">
+          <option value="">--</option>
+        </select>
+        <span>日</span>
+        <select id="age" class="day-age-select">
+          <option value="">--</option>
+        </select>
+        <span>歳</span>
+        <label for="gender" class="gender-label">性別</label>
+        <select id="gender" class="gender-select">
+          <option value="">--</option>
+          <option value="男性">男性</option>
+          <option value="女性">女性</option>
+          <option value="その他">その他</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 写真 -->
+    <div class="form-group photo-upload-container">
+      <label for="input-photo">証明写真</label>
+      <div class="photo-placeholder" onclick="document.getElementById('input-photo').click()">
+        画像を追加して<br />ください。
+      </div>
+      <input
+        type="file"
+        id="input-photo"
+        accept="image/*"
+        style="display: none"
+      />
+    </div>
+
+    <!-- 住所 -->
+    <div class="section-title">住所</div>
+    <div class="post-code-group">
+      <label for="input-postal-code">郵便番号</label>
+      <input type="text" id="input-postal-code" placeholder="" />
+    </div>
+    <div class="address-furigana-group">
+      <label for="input-address-furigana">フリガナ</label>
+      <input type="text" id="input-address-furigana" placeholder="" />
+    </div>
+    <div class="address-group">
+      <label for="input-address">現住所</label>
+      <input type="text" id="input-address" placeholder="" />
+    </div>
+    <div class="tell-group">
+      <label for="input-phone">電話</label>
+      <input type="text" id="input-phone" placeholder="" />
+    </div>
+    <div class="mail-group">
+      <label for="input-email">Email</label>
+      <input type="text" id="input-email" placeholder="" />
+    </div>
+
+    <!-- 連絡先（現住所以外） -->
+    <div class="section-title">連絡先（現住所以外）</div>
+    <div class="t-post-code-group">
+      <label for="input-alt-postal-code">郵便番号</label>
+      <input type="text" id="input-alt-postal-code" />
+    </div>
+    <div class="t-address-furigana-group">
+      <label for="input-alt-address-furigana">フリガナ</label>
+      <input type="text" id="input-alt-address-furigana" />
+    </div>
+    <div class="t-address-group">
+      <label for="input-alt-address">住所</label>
+      <input type="text" id="input-alt-address" />
+    </div>
+    <div class="t-tell-group">
+      <label for="input-alt-phone">電話</label>
+      <input type="text" id="input-alt-phone" />
+    </div>
+    <div class="t-mail-group">
+      <label for="input-alt-email">Email</label>
+      <input type="text" id="input-alt-email" placeholder="" />
+    </div>
+
+    <!-- 学歴・職歴 -->
+    <div class="section-title">学歴・職歴</div>
+    <div id="education-container">
+      <!-- デフォルト1行目のみ -->
+      <div class="row-container">
+        <div class="form-inline">
+          <select class="edu-year"><option value="">--</option></select>
+          <select class="edu-month"><option value="">--</option></select>
+          <input
+            type="text"
+            class="edu-work"
+            placeholder="例：〇〇大学 入学"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="buttons-inline">
+      <button type="button" class="btn btn-primary" id="add-education-row">
+        ＋ 追加する
+      </button>
+      <button type="button" class="btn btn-danger" id="remove-education-last">
+        － 削除
+      </button>
+    </div>
+
+    <!-- 免許・資格 -->
+    <div class="section-title">免許・資格</div>
+    <div id="skill-container">
+      <!-- デフォルト1行目のみ -->
+      <div class="row-container">
+        <div class="form-inline">
+          <select class="license-year"><option value="">--</option></select>
+          <select class="license-month"><option value="">--</option></select>
+          <input
+            type="text"
+            class="skill-history"
+            placeholder="例：普通自動車運転免許"
+            style="text-align: left;"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="buttons-inline">
+      <button type="button" class="btn btn-primary" id="add-skill-row">
+        ＋ 追加する
+      </button>
+      <button type="button" class="btn btn-danger" id="remove-skill-last">
+        － 削除
+      </button>
+    </div>
+
+    <!-- 志望動機 -->
+    <div class="section-title">志望動機</div>
+    <div class="form-group">
+      <textarea id="input-motivation" placeholder=""></textarea>
+    </div>
+
+    <!-- 自己PR -->
+    <div class="section-title">自己PR</div>
+    <div class="form-group">
+      <textarea id="input-pr" placeholder=""></textarea>
+    </div>
+
+    <!-- 本人希望 -->
+    <div class="section-title">
+      本人希望（給与・職種・勤務時間・勤務地 等）
+    </div>
+    <div class="form-group">
+      <textarea id="input-request" placeholder=""></textarea>
+    </div>
+
+    <!-- PDF保存ボタン -->
+    <div class="pdf-btn-wrapper">
+      <button id="pdf-save-btn" class="btn pdf-btn">PDF保存</button>
+    </div>
+  </div>
+  <!-- /left -->
+
+
+  <!-- 右カラム：プレビュー(複数ページ) -->
+  <div class="right">
+    <div class="resume-pages" id="resume-pages">
+      <!-- JSで1ページ目を自動生成 -->
+    </div>
+  </div>
+  <!-- /right -->
+
+</div><!-- /container -->
+
+<!-- メインのJavaScriptファイルを読み込み -->
+<script src="script.js"></script>
+</body>
+</html>

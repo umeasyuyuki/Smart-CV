@@ -1,0 +1,740 @@
+/************************************************************
+ * 全体2カラムレイアウト
+ ************************************************************/
+ * {
+    box-sizing: border-box;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    height: 100%;
+  }
+  
+  .container {
+    display: flex; /* 左右2カラム */
+    height: 100vh; /* 画面全体の高さ */
+  }
+  .left,
+  .right {
+    width: 50%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 20px 20px 20px;
+  }
+  
+  /* 左カラム：フォーム */
+  .left {
+    background-color: #fff;
+    border-right: 1px solid #ccc;
+    color: #2c3e50;
+    position: relative;
+    box-sizing: border-box;
+  }
+  .header-left {
+    background-color: #fff;
+    top: 0;
+    margin-left: -20px;
+    margin-right: -20px;
+    margin-top: -20px;
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    padding: 0;
+    margin-bottom: 20px;
+    z-index: 9999;
+  }
+  .header-left h1 {
+    padding-top: 20px;
+    padding-bottom: 0px;
+  }
+  .header-left .smart {
+    color: #000;
+    font-family: "Istok Web", sans-serif;
+    font-size: 40px;
+  }
+  .header-left .dash {
+    font-family: "Istok Web", sans-serif;
+    font-size: 40px;
+    margin: 0 5px;
+  }
+  .header-left .cv {
+    color: #2cddb4;
+    font-family: "Istok Web", sans-serif;
+    font-size: 40px;
+  }
+  .header-left h2 {
+    font-family: "Istok Web", sans-serif;
+    font-size: 18px;
+    color: #333;
+    padding-top: 0%;
+  }
+  .header-left hr {
+    margin: 10px auto;
+    border: none;
+    border-top: 1px solid #ccc;
+    width: 90%;
+  }
+  
+  .choice-box {
+    border: 1px solid #000;
+    margin: 0 auto;
+    margin-top: 40px;
+    text-align: left;
+    font-size: 20px;
+    color: #000;
+    background-color: #f8f8f8;
+  }
+  .first-box {
+    border: 1px solid #000;
+    margin: 0 auto;
+    height: 10%;
+    margin-top: 40px;
+    text-align: center;
+    border-radius: 100px;
+    font-size: 24px;
+    color: #000;
+    background-color: #d8fff9;
+  }
+  .upload-wrapper {
+    margin-bottom: 20px;
+    margin-left: 80px;
+  }
+  .upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 6px;
+    text-align: center;
+    padding: 20px;
+    cursor: pointer;
+    transition: border-color 0.3s, background-color 0.3s;
+    height: 110px;
+    width: 53%;
+  }
+  .upload-text {
+    color: #888;
+    font-size: 0.9rem;
+  }
+  .upload-area:hover {
+    border-color: #aaa;
+    background-color: #f8f8f8;
+  }
+  .form-group {
+    margin-top: 30px;
+    color: #000;
+    font-size: 20px;
+    border-radius: 40px;
+    width: 75%;
+    margin-left: 80px;
+  }
+  #bulk-generate-btn {
+    margin-left: 80px;
+  }
+  .second-box {
+    border: 1px solid #000;
+    margin: 0 auto;
+    height: 10%;
+    margin-top: 60px;
+    text-align: center;
+    border-radius: 100px;
+    font-size: 24px;
+    color: #000;
+    background-color: #d8fff9;
+  }
+  .name-group {
+    width: 300px;
+    margin-left: 80px;
+    margin-top: 80px;
+  }
+  .furigana-group {
+    width: 300px;
+    margin-left: 140px;
+    margin-top: 80px;
+    margin-right: 30px;
+  }
+  .row-inline {
+    display: flex;
+    align-items: flex-start;
+  }
+  .birthday-box {
+    margin-bottom: 20px;
+    margin-left: 80px;
+    margin-top: 70px;
+  }
+  .birthday-box label {
+    display: inline-block;
+    margin-bottom: 8px;
+    font-size: 16px;
+  }
+  .birthday-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .year-month-select,
+  .day-age-select,
+  .gender-select {
+    border-radius: 20px;
+    text-align: center;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .year-month-select {
+    width: 60px;
+    height: 36px;
+  }
+  .day-age-select {
+    width: 60px;
+    height: 36px;
+  }
+  .gender-select {
+    width: 80px;
+    height: 36px;
+  }
+  .gender-label {
+    margin-left: 16px;
+    margin-right: 4px;
+  }
+  .photo-upload-container {
+    margin-top: 30px;
+    width: 200px;
+  }
+  .photo-upload-container > label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .photo-placeholder {
+    width: 120px;
+    height: 180px;
+    border: 2px dashed #ccc;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+    color: #ccc;
+    background-color: #fff;
+  }
+  label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #2c3e50;
+  }
+  input[type="text"],
+  textarea,
+  input[type="file"] {
+    width: 100%;
+    padding: 8px;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    border: 1px solid #c2bfbf;
+    border-radius: 50px;
+    background: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="text"]:focus,
+  textarea:focus,
+  input[type="file"]:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 4px rgba(52, 152, 219, 0.5);
+    outline: none;
+  }
+  textarea {
+    min-height: 60px;
+    resize: vertical;
+  }
+  .section-title {
+    margin-top: 25px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-bottom: 2px solid #2c3e50;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+    color: #2c3e50;
+  }
+  .post-code-group,
+  .address-furigana-group,
+  .address-group,
+  .tell-group,
+  .mail-group,
+  .t-post-code-group,
+  .t-address-furigana-group,
+  .t-address-group,
+  .t-tell-group,
+  .t-mail-group {
+    font-size: 1.2rem;
+    margin-left: 80px;
+  }
+  .post-code-group { width: 150px; }
+  .address-furigana-group { width: 680px; }
+  .address-group { width: 680px; }
+  .tell-group { width: 340px; }
+  .mail-group { width: 340px; }
+  .t-post-code-group { width: 150px; }
+  .t-address-furigana-group { width: 680px; }
+  .t-address-group { width: 680px; }
+  .t-tell-group { width: 340px; }
+  .t-mail-group { width: 340px; }
+  
+  .form-inline {
+    display: flex;
+    gap: 8px;
+  }
+  .row-container {
+    align-items: center;
+    gap: 10px;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 12px;
+    background: #fff;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+  .edu-year, .edu-month,
+  .license-year, .license-month {
+    width: 60px;
+    height: 30px;
+    border-radius: 20px;
+    text-align: center;
+    border: 1px solid #c2bfbf;
+  }
+  .edu-work {
+    width: 250px;
+    height: 30px;
+    border-radius: 20px;
+  }
+  .skill-history {
+    width: 250px;
+    height: 30px;
+    border-radius: 20px;
+    /* 左揃えはデフォルトですが、明示的に書く場合は以下 */
+    text-align: left;
+  }
+  .buttons-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  .btn {
+    display: inline-block;
+    color: #fff;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    margin-right: 5px;
+    transition: background 0.3s, opacity 0.3s;
+  }
+  .btn:hover {
+    opacity: 0.9;
+  }
+  .btn-primary {
+    background: #3498db;
+  }
+  .btn-danger {
+    background: #e74c3c;
+  }
+  .btn-primary:hover {
+    background: #2980b9;
+  }
+  .btn-danger:hover {
+    background: #c0392b;
+  }
+  .pdf-btn-wrapper {
+    text-align: center;
+    margin-top: 40px;
+  }
+  .pdf-btn {
+    margin-top: 20px;
+    background: #2ecc71;
+    font-size: 1rem;
+    display: block;
+    border-radius: 20px;
+    margin: 0 auto;
+  }
+  
+  /************************************************************
+   * 右カラム：履歴書プレビュー (複数ページ分割)
+   ************************************************************/
+  .right {
+    background-color: #d9d9d9;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px;
+  }
+  .resume-pages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .resume-page {
+    background-color: #fff;
+    width: 210mm; /* A4幅 */
+    height: 297mm; /* A4高さ */
+    box-sizing: border-box;
+    padding: 10mm;
+    margin: 20px 0;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #000;
+  }
+  .resume-content {
+    margin: 0;
+    padding: 0;
+  }
+  @media print {
+    .resume-page {
+      page-break-after: always;
+    }
+    .resume-page:last-child {
+      page-break-after: auto;
+    }
+  }
+  .resume-preview {
+    color: #000;
+  }
+  .resume-content .title {
+    font-size: 16pt;
+    font-weight: bold;
+    margin-bottom: 0;
+  }
+  .resume-content .date-right {
+    text-align: right;
+    font-size: 11pt;
+    font-weight: normal;
+    margin-right: 5mm;
+  }
+  .top-section {
+    display: flex;
+    align-items: end;
+    gap: 10px;
+  }
+  .name-furigana-table {
+    width: 80%;
+    border: 2px solid #000;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    margin-bottom: 0;
+  }
+  tr.furigana-box td.furigana-label {
+    width: 20px;
+    height: 10px;
+    padding: 5px;
+    border-right: 1px solid #000;
+    text-align: center;
+    font-size: 10px;
+    border-bottom: 1px dotted #000;
+  }
+  tr.furigana-box td.furigana-value {
+    width: 60px;
+    padding: 5px;
+    text-align: center;
+    font-size: 10px;
+    border-bottom: 1px dotted #000;
+  }
+  tr.name-table td.name-label {
+    width: 20px;
+    height: 80px;
+    padding: 5px;
+    border-right: 1px solid #000;
+    text-align: center;
+  }
+  tr.name-table td.name-value-left {
+    width: 20px;
+    height: 80px;
+    padding: 5px;
+    text-align: center;
+    font-size: 20px;
+  }
+  .birthday-gender-table {
+    width: 100%;
+    border: 2px solid #000;
+    border-collapse: separate;
+    margin-top: 3%;
+    table-layout: fixed;
+  }
+  td.birthday-label {
+    width: 19.5%;
+    height: 40px;
+    border-right: 1px solid #000;
+    text-align: center;
+    font-size: 10px;
+  }
+  .birthday-value {
+    width: 200px;
+    border-right: 1px solid #000;
+    text-align: center;
+    font-size: 13px;
+  }
+  .gender-value {
+    text-align: center;
+    width: 10%;
+  }
+  .photo-box {
+    width: 96px;
+    height: 125px;
+    overflow: hidden;
+    text-align: center;
+  }
+  .photo-box img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+  .contact-info-table {
+    width: 100%;
+    border: 2px solid #000;
+    margin-top: 3%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .contact-info {
+    height: 20px;
+    text-align: center;
+  }
+  th.address-furigana-label {
+    border-bottom: 1px dotted #000;
+    border-right: 1px solid #000;
+    width: 19.5%;
+    font-size: 10px;
+  }
+  td.address-furigana-value {
+    border-bottom: 1px dotted #000;
+    border-right: 1px solid #000;
+    width: 50%;
+    font-size: 10px;
+  }
+  th.tel-label {
+    width: 10%;
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+    font-size: 10px;
+  }
+  td.tel-value {
+    border-bottom: 1px solid #000;
+    width: 120%;
+    font-size: 10px;
+  }
+  th.address-label {
+    border-right: 1px solid #000;
+    height: 40px;
+    font-size: 10px;
+  }
+  td.address-value {
+    border-right: 1px solid #000;
+    text-align: left;
+    font-size: 15px;
+  }
+  th.email-label {
+    border-right: 1px solid #000;
+    font-size: 10px;
+  }
+
+  td.email-value {
+    font-size: 10px;
+    text-align: center;
+  }
+
+  .alt-contact-table {
+    width: 100%;
+    border: 2px solid #000;
+    margin-top: 3%;
+    border-spacing: 0;
+  }
+  .alt-contact-info {
+    height: 20px;
+    text-align: center;
+  }
+  th.alt-address-furigana-label {
+    border-bottom: 1px dotted #000;
+    border-right: 1px solid #000;
+    width: 19.5%;
+    font-size: 10px;
+  }
+  td.alt-address-furigana-value {
+    border-bottom: 1px dotted #000;
+    border-right: 1px solid #000;
+    width: 50%;
+    font-size: 10px;
+  }
+  th.alt-tel-label {
+    width: 10%;
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+    font-size: 10px;
+  }
+  td.alt-tel-value {
+    border-bottom: 1px solid #000;
+    width: 120%;
+    font-size: 10px;
+  }
+  th.alt-address-label {
+    border-right: 1px solid #000;
+    height: 40px;
+    font-size: 10px;
+  }
+  td.alt-address-value {
+    border-right: 1px solid #000;
+    text-align: left;
+    font-size: 15px;
+  }
+  th.alt-email-label {
+    border-right: 1px solid #000;
+    font-size: 10px;
+  }
+  
+  /* 学歴・職歴テーブル(右側) : 12行分 */
+  .education-table {
+    width: 100%;
+    border: 2px solid #000;
+    margin-top: 3%;
+    border-spacing: 0;
+    text-align: center;
+  }
+  .education-info {
+    height: 30px;
+    text-align: center;
+  }
+  th.education-year {
+    width: 15mm;
+    height: 7mm;
+    border-right: 1px dotted #000;
+    font-size: 10px;
+
+  }
+  th.education-container-month {
+    width: 15mm;
+    height: 7mm;
+    border-right: 1px dotted #000;
+    font-size: 10px;
+  }
+  th.education-history {
+    width: 80%;
+    height: 7mm;
+    font-size: 10px;
+  }
+  td.education-year-value {
+    border-right: 1px dotted #000;
+    border-top: 1px dotted #000;
+    height: 40px;
+  }
+  td.education-container-month-value {
+    border-right: 1px dotted #000;
+    border-top: 1px dotted #000;
+    height: 40px;
+  }
+  td.education-history-value {
+    border-top: 1px dotted #000;
+    height: 40px;
+  }
+  
+  /* 免許・資格テーブル(右側) : 6行分 */
+  .skill-table {
+    width: 100%;
+    border: 2px solid #000;
+    margin-top: 3%;
+    border-spacing: 0;
+    text-align: center;
+  }
+  .skill-info {
+    height: 30px;
+    text-align: center;
+  }
+  th.skill-year {
+    width: 15mm;
+    height: 7mm;
+    border-right: 1px dotted #000;
+    font-size: 10px;
+  }
+  th.skill-container-month {
+    width: 15mm;
+    height: 7mm;
+    border-right: 1px dotted #000;
+    font-size: 10px;
+  }
+  th.skill-history {
+    width: 80%;
+    height: 7mm;
+    font-size: 10px;
+    text-align: center;
+  }
+  td.skill-year-value {
+    border-right: 1px dotted #000;
+    border-top: 1px dotted #000;
+    height: 40px;
+  }
+  td.skill-container-month-value {
+    border-right: 1px dotted #000;
+    border-top: 1px dotted #000;
+    height: 40px;
+  }
+  td.skill-history-value {
+    border-top: 1px dotted #000;
+    height: 40px;
+  }
+  
+  .motivation-table {
+    width: 100%;
+    border: 2px solid #000;
+    margin-top: 3%;
+  }
+  th.motivation-label {
+    height: 5mm;
+    text-align: left;
+    vertical-align: top;
+    font-size: 10px;
+  }
+  td.motivation-value {
+    height: 170px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .pr-table {
+    width: 100%;
+    border: 2px solid #000;
+    margin-top: 3%;
+  }
+  th.pr-label {
+    height: 5mm;
+    text-align: left;
+    vertical-align: top;
+    font-size: 10px;
+  }
+  td.pr-value {
+    height: 170px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .request-table {
+    width: 100%;
+    border: 2px solid #000;
+    margin-top: 3%;
+  }
+  th.request-label {
+    height: 5mm;
+    text-align: left;
+    vertical-align: top;
+    font-size: 10px;
+  }
+  td.request-value {
+    height: 170px;
+    text-align: left;
+    vertical-align: top;
+  }
+  table,
+  tr,
+  td,
+  th {
+    page-break-inside: avoid;
+  }
+  /* ブロック（.block）単位で次ページへ移動 */
+  .block {
+    margin-bottom: 20px;
+  }

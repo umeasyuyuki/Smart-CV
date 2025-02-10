@@ -1,0 +1,187 @@
+/* ---------------------------------------------------- */
+/* リセットや基本設定                                   */
+/* ---------------------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Istok Web", sans-serif;
+  color: #333;
+  margin: 20px;
+  line-height: 1.6;
+  background-color: #fdfdfd; /* 背景色を薄めに設定（お好み） */
+}
+
+/* ---------------------------------------------------- */
+/* ヘッダー部分                                         */
+/* ---------------------------------------------------- */
+.header {
+  position: fixed; /* スクロールしても動かないように固定 */
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  z-index: 9999; /* ヘッダーが他要素の上に重なる */
+
+  background-color: #fff; /* 背景色 */
+  text-align: center;     
+  border-bottom: 1px solid #ccc;
+  /* height, line-heightなどは固定しない方がスマホ等でも崩れにくい */
+  padding: 10px 0; /* 縦方向の余白 */
+}
+
+.header h1 {
+  margin-bottom: 5px;
+}
+
+.smart {
+  color: #000;
+  font-size: 55px;
+}
+
+.dash {
+  font-size: 55px;
+  margin: 0 2;
+}
+
+.cv {
+  color: #2cddb4;
+  font-size: 55px;
+}
+
+.header > span {
+  font-size: 20px;
+  color: #000;
+}
+
+/* 横線 */
+hr {
+  margin: 20px 0 20px 0;
+  border: none;
+  border-top: 1px solid #ccc;
+}
+
+/* ---------------------------------------------------- */
+/* メインコンテンツのレイアウト                         */
+/* ---------------------------------------------------- */
+.content {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: 120px; /* 固定ヘッダーの分だけ上に空白を */
+  padding: 20px;
+  gap: 50px;
+}
+
+/* カラムごとの設定 */
+.column {
+  text-align: center;
+  max-width: 300px;
+}
+
+.column h2 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  color: #000;
+}
+
+.column img {
+  max-width: 100%;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.column img:hover {
+  opacity: 0.8;
+}
+
+/* ---------------------------------------------------- */
+/* 下部の説明ボックス                                   */
+/* ---------------------------------------------------- */
+.bottom-box {
+  max-width: 800px;
+  margin: 0 auto 40px auto;
+  padding: 20px;
+  background-color: #d8fff9;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+.bottom-box p {
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #000;
+}
+
+/* 左揃え用クラス */
+.left-align {
+  text-align: left;
+  max-width: 600px;
+  margin: 0 auto 10px auto;
+}
+
+/* 「最短３０秒で」の部分を赤文字・太字 */
+.emphasis {
+  color: #ff3333;
+  font-weight: bold;
+  font-size: 25px;
+}
+
+/* キーワード強調 */
+.keyword {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.space-left {
+  margin-left: 7.7rem; /* 必要に応じて調整 */
+}
+
+/* 呼びかけ部分 */
+.cta {
+  font-size: 1.2rem;
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+/* ---------------------------------------------------- */
+/* レスポンシブ対応: 768px以下の画面用メディアクエリ    */
+/* ---------------------------------------------------- */
+@media (max-width: 768px) {
+  /* コンテンツを縦に並べる */
+  .content {
+    flex-direction: column;
+    align-items: center;
+    margin-top: 160px; /* 必要に応じて調整 */
+    gap: 20px;
+  }
+
+  /* カラムの幅を広げて1カラム表示にする */
+  .column {
+    max-width: 90%;
+    margin-bottom: 20px;
+  }
+
+  /* 文字サイズの微調整 */
+  .smart,
+  .dash,
+  .cv {
+    font-size: 40px;
+  }
+  .header > span {
+    font-size: 16px;
+  }
+
+  /* bottom-box の幅調整 */
+  .bottom-box {
+    max-width: 90%;
+    margin: 20px auto;
+  }
+
+  /* 左余白を小さくするなど */
+  .space-left {
+    margin-left: 1.5rem;
+  }
+}

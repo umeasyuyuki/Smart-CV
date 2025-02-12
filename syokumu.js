@@ -1,27 +1,24 @@
 /***************************************************
  * (A) 連携先URLなどの設定 (例：実際には適宜修正)
  ***************************************************/
-const scriptURL =
-  "https://script.google.com/macros/u/2/s/AKfycbzJCzE2eCpXSnKWU0Q3papybktyrrQV3h74tD0yZyHwTPwmkFZPwXJvGCzHhoXaH3dNOg/exec"; // Google Apps Scriptなど
-const difyUploadURL = "https://api.dify.ai/v1/files/upload"; // 例
-const difyAPIKey = "app-nec0NdADJDdpecQKQYvtxzmD"; // ダミーキー
+const scriptURL = "https://script.google.com/macros/u/2/s/AKfycbzJCzE2eCpXSnKWU0Q3papybktyrrQV3h74tD0yZyHwTPwmkFZPwXJvGCzHhoXaH3dNOg/exec";   // Google Apps Scriptなど
+const difyUploadURL = "https://api.dify.ai/v1/files/upload";             // 例
+const difyAPIKey = "app-nec0NdADJDdpecQKQYvtxzmD";                        // ダミーキー
 
 /***************************************************
  * (B) グローバル変数
  ***************************************************/
-let selectedFile = null; // ユーザーがアップロード選択したファイル
-let uploadedFileURL = null; // 解析APIなどで生成されたファイルURLを格納
+let selectedFile = null;     // ユーザーがアップロード選択したファイル
+let uploadedFileURL = null;  // 解析APIなどで生成されたファイルURLを格納
 
 /***************************************************
  * (C) ページ初期化
  ***************************************************/
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
   console.log("[DEBUG] DOMContentLoaded: setting up...");
 
   const today = new Date();
-  window.currentDateString = ${today.getFullYear()}年${String(
-    today.getMonth() + 1
-  ).padStart(2, "0")}月${String(today.getDate()).padStart(2, "0")}日;
+  window.currentDateString = `${today.getFullYear()}年${String(today.getMonth()+1).padStart(2,'0')}月${String(today.getDate()).padStart(2,'0')}日`;
 
   // イベントバインド等セットアップ
   setupBindings();
@@ -30,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // PDFダウンロード
   const pdfBtn = document.getElementById("download-pdf");
   if (pdfBtn) {
-    pdfBtn.addEventListener("click", handleDownloadPDF);
+    pdfBtn.addEventListener('click', handleDownloadPDF);
   }
 
   // ファイルアップロード
@@ -58,11 +55,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 職務要約の文字数カウント
   const summaryInput = document.getElementById("input-summary");
-  const charCounter = document.getElementById("char-counter");
+  const charCounter  = document.getElementById("char-counter");
   if (summaryInput && charCounter) {
     summaryInput.addEventListener("input", () => {
       const currentLength = summaryInput.value.length;
-      charCounter.textContent = ${currentLength} / 300字;
+      charCounter.textContent = `${currentLength} / 300字`;
     });
   }
 
@@ -71,7 +68,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /***************************************************
  * (D) 一括生成する (例：API解析)
- *     ※ Dify API側がCORS許可していない場合はエラーになる可能性があります
  ***************************************************/
 async function handleBulkGenerate() {
   if (!selectedFile) {
@@ -82,13 +78,11 @@ async function handleBulkGenerate() {
     const formData = new FormData();
     formData.append("file", selectedFile);
 
-    // 例：Dify APIに送る場合（CORS対応していないとブラウザでブロックされるかも）
+    // 例：Dify APIに送る場合
     const response = await fetch(difyUploadURL, {
-      method: "POST",
-      // mode: "cors", // ← DifyがCORS許可ならこれ
-      // もしCORS未対応なら "no-cors" にするが、結果を受け取れなくなるので注意
+      method: 'POST',
       headers: { "x-api-key": difyAPIKey },
-      body: formData,
+      body: formData
     });
 
     if (!response.ok) {
@@ -132,7 +126,7 @@ function handleDownloadUploadedFile() {
     alert("まだファイルがアップロードされていません。");
     return;
   }
-  const a = document.createElement("a");
+  const a = document.createElement('a');
   a.href = uploadedFileURL;
   a.download = "";
   document.body.appendChild(a);
@@ -193,8 +187,9 @@ function setupBindings() {
  * (F+) ★ テーブルの上線だけ消す関数を追加 ★
  ***************************************************/
 function removeTableTopLine(wrapperElem) {
+  // wrapperElem 内のすべてのテーブルに対し border-top を消す
   const tables = wrapperElem.querySelectorAll("table");
-  tables.forEach((table) => {
+  tables.forEach(table => {
     table.style.borderTop = "none";
   });
 }
@@ -210,6 +205,7 @@ function setupAddRemoveCareer() {
   const container = document.getElementById("career-container");
   const firstBlock = document.getElementById("career-first");
 
+  // 初期ブロックでもテーブル上線を消す
   removeTableTopLine(firstBlock);
 
   if (addBtn) {
@@ -217,13 +213,14 @@ function setupAddRemoveCareer() {
       careerCount++;
       const clone = firstBlock.cloneNode(true);
       // ID再採番 + イベントリスナー
-      clone.querySelectorAll('[id^="career1-"]').forEach((elem) => {
-        const newId = elem.id.replace("career1-", career${careerCount}-);
+      clone.querySelectorAll('[id^="career1-"]').forEach(elem => {
+        const newId = elem.id.replace("career1-", `career${careerCount}-`);
         elem.id = newId;
         elem.value = "";
         elem.addEventListener("input", updatePreviewPages);
       });
 
+      // sub-sectionラッパ
       let wrapper = document.createElement("div");
       wrapper.className = "sub-section";
       wrapper.style.borderTop = "1px solid #000";
@@ -233,6 +230,8 @@ function setupAddRemoveCareer() {
 
       wrapper.appendChild(clone);
       container.appendChild(wrapper);
+
+      // 追加されたブロック内のテーブル上線を消す
       removeTableTopLine(wrapper);
 
       updatePreviewPages();
@@ -245,7 +244,8 @@ function setupAddRemoveCareer() {
         container.removeChild(container.lastElementChild);
         careerCount--;
       } else {
-        firstBlock.querySelectorAll('[id^="career1-"]').forEach((elem) => {
+        // 1つしかない場合は入力リセットのみ
+        firstBlock.querySelectorAll('[id^="career1-"]').forEach(elem => {
           elem.value = "";
         });
       }
@@ -257,25 +257,26 @@ function setupAddRemoveCareer() {
 // ▼ 免許・資格
 let licenseCount = 1;
 function setupAddRemoveLicense() {
-  const addBtn = document.getElementById("add-license-row");
-  const removeBtn = document.getElementById("remove-license-row");
-  const licenseContainer = document.getElementById("license-container");
-  const firstLicense = document.getElementById("license-first");
+  const addBtn = document.getElementById('add-license-row');
+  const removeBtn = document.getElementById('remove-license-row');
+  const licenseContainer = document.getElementById('license-container');
+  const firstLicense = document.getElementById('license-first');
 
+  // 初期ブロックでもテーブル上線を消す
   removeTableTopLine(firstLicense);
 
   if (addBtn) {
-    addBtn.addEventListener("click", () => {
+    addBtn.addEventListener('click', () => {
       licenseCount++;
       let clone = firstLicense.cloneNode(true);
-      clone.querySelectorAll('[id^="license1-"]').forEach((elem) => {
-        let newId = elem.id.replace("license1-", license${licenseCount}-);
+      clone.querySelectorAll('[id^="license1-"]').forEach(elem => {
+        let newId = elem.id.replace('license1-', `license${licenseCount}-`);
         elem.id = newId;
         elem.value = "";
-        elem.addEventListener("input", updatePreviewPages);
+        elem.addEventListener('input', updatePreviewPages);
       });
-      let wrapper = document.createElement("div");
-      wrapper.className = "sub-section";
+      let wrapper = document.createElement('div');
+      wrapper.className = 'sub-section';
       wrapper.style.borderTop = "1px solid #000";
       wrapper.style.marginTop = "10px";
       wrapper.style.paddingTop = "10px";
@@ -283,18 +284,20 @@ function setupAddRemoveLicense() {
 
       wrapper.appendChild(clone);
       licenseContainer.appendChild(wrapper);
+
+      // 追加ブロックでもテーブル上線を消す
       removeTableTopLine(wrapper);
 
       updatePreviewPages();
     });
   }
   if (removeBtn) {
-    removeBtn.addEventListener("click", () => {
+    removeBtn.addEventListener('click', () => {
       if (licenseContainer.children.length > 1) {
         licenseContainer.removeChild(licenseContainer.lastElementChild);
         licenseCount--;
       } else {
-        firstLicense.querySelectorAll('[id^="license1-"]').forEach((elem) => {
+        firstLicense.querySelectorAll('[id^="license1-"]').forEach(elem => {
           elem.value = "";
         });
       }
@@ -306,26 +309,27 @@ function setupAddRemoveLicense() {
 // ▼ 語学
 let langCount = 1;
 function setupAddRemoveLang() {
-  const addBtn = document.getElementById("add-lang-row");
-  const removeBtn = document.getElementById("remove-lang-row");
-  const langContainer = document.getElementById("lang-container");
-  const firstLang = document.getElementById("lang-first");
+  const addBtn = document.getElementById('add-lang-row');
+  const removeBtn = document.getElementById('remove-lang-row');
+  const langContainer = document.getElementById('lang-container');
+  const firstLang = document.getElementById('lang-first');
 
+  // 初期ブロックでもテーブル上線を消す
   removeTableTopLine(firstLang);
 
   if (!addBtn || !removeBtn || !langContainer || !firstLang) return;
 
-  addBtn.addEventListener("click", () => {
+  addBtn.addEventListener('click', () => {
     langCount++;
     let clone = firstLang.cloneNode(true);
-    clone.querySelectorAll('[id^="lang1-"]').forEach((elem) => {
-      let newId = elem.id.replace("lang1-", lang${langCount}-);
+    clone.querySelectorAll('[id^="lang1-"]').forEach(elem => {
+      let newId = elem.id.replace('lang1-', `lang${langCount}-`);
       elem.id = newId;
       elem.value = "";
-      elem.addEventListener("input", updatePreviewPages);
+      elem.addEventListener('input', updatePreviewPages);
     });
-    let wrapper = document.createElement("div");
-    wrapper.className = "sub-section";
+    let wrapper = document.createElement('div');
+    wrapper.className = 'sub-section';
     wrapper.style.borderTop = "1px solid #000";
     wrapper.style.marginTop = "10px";
     wrapper.style.paddingTop = "10px";
@@ -333,17 +337,19 @@ function setupAddRemoveLang() {
 
     wrapper.appendChild(clone);
     langContainer.appendChild(wrapper);
+
+    // 追加ブロックでもテーブル上線を消す
     removeTableTopLine(wrapper);
 
     updatePreviewPages();
   });
 
-  removeBtn.addEventListener("click", () => {
+  removeBtn.addEventListener('click', () => {
     if (langContainer.children.length > 1) {
       langContainer.removeChild(langContainer.lastElementChild);
       langCount--;
     } else {
-      firstLang.querySelectorAll('[id^="lang1-"]').forEach((elem) => {
+      firstLang.querySelectorAll('[id^="lang1-"]').forEach(elem => {
         elem.value = "";
       });
     }
@@ -355,13 +361,14 @@ function setupAddRemoveLang() {
  * (H) 右カラムのプレビュー生成
  ***************************************************/
 function updatePreviewPages() {
-  const wrap = document.getElementById("resumePages");
+  const wrap = document.getElementById('resumePages');
   if (!wrap) return;
-  wrap.innerHTML = "";
+  wrap.innerHTML = '';
 
+  // ページを作成
   function createNewPage() {
-    const page = document.createElement("div");
-    page.className = "resume-page";
+    const page = document.createElement('div');
+    page.className = 'resume-page';
     wrap.appendChild(page);
     return page;
   }
@@ -372,82 +379,80 @@ function updatePreviewPages() {
   currentPage.appendChild(makeTitleBlock());
 
   // 職務要約
-  currentPage.appendChild(makeSectionTitle("職務要約"));
+  currentPage.appendChild(makeSectionTitle('職務要約'));
   {
-    const text = docVal("input-summary");
-    const summaryBlock = document.createElement("div");
-    summaryBlock.classList.add("summary-block");
+    const text = docVal('input-summary');
+    const summaryBlock = document.createElement('div');
+    summaryBlock.classList.add('summary-block');
     summaryBlock.textContent = text;
     if (isOverflowAfterAppend(currentPage, summaryBlock)) {
       currentPage = createNewPage();
-      currentPage.appendChild(makeSectionTitle("職務要約"));
+      currentPage.appendChild(makeSectionTitle('職務要約'));
     }
     currentPage.appendChild(summaryBlock);
   }
 
   // 職歴
-  currentPage.appendChild(makeSectionTitle("職歴"));
+  currentPage.appendChild(makeSectionTitle('職歴'));
   for (let i = 1; i <= careerCount; i++) {
     const block = makeCareerBlock(i);
     if (isOverflowAfterAppend(currentPage, block)) {
       currentPage = createNewPage();
-      currentPage.appendChild(makeSectionTitle("職歴"));
+      currentPage.appendChild(makeSectionTitle('職歴'));
     }
     currentPage.appendChild(block);
   }
 
   // 免許・資格
-  currentPage.appendChild(makeSectionTitle("免許・資格"));
+  currentPage.appendChild(makeSectionTitle('免許・資格'));
   for (let i = 1; i <= licenseCount; i++) {
     const table = makeLicenseTable(i);
     table.classList.add("license-table");
     if (isOverflowAfterAppend(currentPage, table)) {
       currentPage = createNewPage();
-      currentPage.appendChild(makeSectionTitle("免許・資格"));
+      currentPage.appendChild(makeSectionTitle('免許・資格'));
     }
     currentPage.appendChild(table);
   }
 
   // 語学
-  currentPage.appendChild(makeSectionTitle("語学"));
+  currentPage.appendChild(makeSectionTitle('語学'));
   for (let i = 1; i <= langCount; i++) {
     const table = makeLangTable(i);
     table.classList.add("lang-table");
     if (isOverflowAfterAppend(currentPage, table)) {
       currentPage = createNewPage();
-      currentPage.appendChild(makeSectionTitle("語学"));
+      currentPage.appendChild(makeSectionTitle('語学'));
     }
     currentPage.appendChild(table);
   }
 
   // 活かせる経験・知識・技術
-  currentPage.appendChild(makeSectionTitle("活かせる経験・知識・技術"));
+  currentPage.appendChild(makeSectionTitle('活かせる経験・知識・技術'));
   {
-    const text = docVal("input-skill");
-    const block = document.createElement("div");
-    block.style.whiteSpace = "pre-wrap";
-    block.style.wordWrap = "break-word";
+    const text = docVal('input-skill');
+    const block = document.createElement('div');
+    block.style.whiteSpace = 'pre-wrap';
+    block.style.wordWrap = 'break-word';
     block.textContent = text;
     if (isOverflowAfterAppend(currentPage, block)) {
       currentPage = createNewPage();
-      currentPage.appendChild(
-        makeSectionTitle("活かせる経験・知識・技術")
-      );
+      currentPage.appendChild(makeSectionTitle('活かせる経験・知識・技術'));
     }
     currentPage.appendChild(block);
   }
 
   // 自己PR
-  currentPage.appendChild(makeSectionTitle("自己PR"));
+  currentPage.appendChild(makeSectionTitle('自己PR'));
   {
-    const text = docVal("input-pr");
-    const block = document.createElement("div");
-    block.style.whiteSpace = "pre-wrap";
-    block.style.wordWrap = "break-word";
+    const text = docVal('input-pr');
+    const block = document.createElement('div');
+    block.style.whiteSpace = 'pre-wrap';
+    block.style.wordWrap = 'break-word';
     block.textContent = text;
     if (isOverflowAfterAppend(currentPage, block)) {
       currentPage = createNewPage();
-      currentPage.appendChild(makeSectionTitle("自己PR"));
+      currentPage.appendChild(makeSectionTitle('自己PR'));
     }
     currentPage.appendChild(block);
   }
@@ -457,33 +462,33 @@ function updatePreviewPages() {
  * (I) タイトルブロック
  ***************************************************/
 function makeTitleBlock() {
-  const nameVal = esc(docVal("input-name"));
-  const telVal = esc(docVal("input-tel"));
-  const mailVal = esc(docVal("input-mail"));
-  const dateStr = window.currentDateString || "";
+  const nameVal = esc(docVal('input-name'));
+  const telVal = esc(docVal('input-tel'));
+  const mailVal = esc(docVal('input-mail'));
+  const dateStr = window.currentDateString || '';
 
-  const container = document.createElement("div");
-  const titleEl = document.createElement("div");
-  titleEl.classList.add("preview-title");
-  titleEl.textContent = "職務経歴書";
+  const container = document.createElement('div');
+  const titleEl = document.createElement('div');
+  titleEl.classList.add('preview-title');
+  titleEl.textContent = '職務経歴書';
   container.appendChild(titleEl);
 
-  const infoEl = document.createElement("div");
-  infoEl.classList.add("top-right");
-  infoEl.innerHTML = 
+  const infoEl = document.createElement('div');
+  infoEl.classList.add('top-right');
+  infoEl.innerHTML = `
     <div>作成日: ${dateStr}</div>
     <div>名前: ${nameVal}</div>
     <div>Tel: ${telVal}</div>
     <div>Mail: ${mailVal}</div>
-  ;
+  `;
   container.appendChild(infoEl);
 
   return container;
 }
 
 function makeSectionTitle(txt) {
-  const d = document.createElement("div");
-  d.className = "preview-section-title";
+  const d = document.createElement('div');
+  d.className = 'preview-section-title';
   d.textContent = txt;
   return d;
 }
@@ -492,34 +497,34 @@ function makeSectionTitle(txt) {
  * (J) 職歴ブロック
  ***************************************************/
 function makeCareerBlock(i) {
-  const period = docVal(career${i}-period);
-  const company = docVal(career${i}-company);
-  const employment = docVal(career${i}-employment);
-  const position = docVal(career${i}-position);
-  const business = docVal(career${i}-business);
-  const duty = docVal(career${i}-duty);
-  const achievement = docVal(career${i}-achievement);
-  const empcount = docVal(career${i}-empcount);
-  const capital = docVal(career${i}-capital);
-  const market = docVal(career${i}-market);
+  const period      = docVal(`career${i}-period`);
+  const company     = docVal(`career${i}-company`);
+  const employment  = docVal(`career${i}-employment`);
+  const position    = docVal(`career${i}-position`);
+  const business    = docVal(`career${i}-business`);
+  const duty        = docVal(`career${i}-duty`);
+  const achievement = docVal(`career${i}-achievement`);
+  const empcount    = docVal(`career${i}-empcount`);
+  const capital     = docVal(`career${i}-capital`);
+  const market      = docVal(`career${i}-market`);
 
-  const wrapper = document.createElement("div");
-  wrapper.style.marginBottom = "16px";
+  const wrapper = document.createElement('div');
+  wrapper.style.marginBottom = '16px';
 
   // 会社情報
-  const infoDiv = document.createElement("div");
-  infoDiv.style.marginBottom = "0px";
-  infoDiv.innerHTML = 
+  const infoDiv = document.createElement('div');
+  infoDiv.style.marginBottom = '0px';
+  infoDiv.innerHTML = `
     会社名： ${esc(company)}<br>
     事業内容： ${esc(business)}<br>
     資本金： ${esc(capital)}　従業員数： ${esc(empcount)}　株式市場： ${esc(market)}
-  ;
+  `;
   wrapper.appendChild(infoDiv);
 
   // 期間／業務内容テーブル
-  const table = document.createElement("table");
-  table.classList.add("career-format-table");
-  table.innerHTML = 
+  const table = document.createElement('table');
+  table.classList.add('career-format-table');
+  table.innerHTML = `
     <thead>
       <tr>
         <th style="width:25%">期間</th>
@@ -539,7 +544,7 @@ function makeCareerBlock(i) {
         </td>
       </tr>
     </tbody>
-  ;
+  `;
   wrapper.appendChild(table);
 
   return wrapper;
@@ -549,11 +554,11 @@ function makeCareerBlock(i) {
  * (K) 免許・資格テーブル
  ***************************************************/
 function makeLicenseTable(i) {
-  const y = docVal(license${i}-year);
-  const mo = docVal(license${i}-month);
-  const nm = docVal(license${i}-name);
-  const table = document.createElement("table");
-  table.innerHTML = 
+  const y  = docVal(`license${i}-year`);
+  const mo = docVal(`license${i}-month`);
+  const nm = docVal(`license${i}-name`);
+  const table = document.createElement('table');
+  table.innerHTML = `
     <tr>
       <th>年</th>
       <td style="width:25mm;">${esc(y)}</td>
@@ -562,7 +567,7 @@ function makeLicenseTable(i) {
       <th colspan="2" style="text-align:center;">免許・資格名</th>
       <td colspan="3" style="height:auto;">${esc(nm)}</td>
     </tr>
-  ;
+  `;
   return table;
 }
 
@@ -570,17 +575,17 @@ function makeLicenseTable(i) {
  * (L) 語学テーブル
  ***************************************************/
 function makeLangTable(i) {
-  const l = docVal(lang${i}-lang);
-  const lv = docVal(lang${i}-level);
-  const table = document.createElement("table");
-  table.innerHTML = 
+  const l  = docVal(`lang${i}-lang`);
+  const lv = docVal(`lang${i}-level`);
+  const table = document.createElement('table');
+  table.innerHTML = `
     <tr>
       <th>語学</th>
       <td>${esc(l)}</td>
       <th>レベル</th>
       <td>${esc(lv)}</td>
     </tr>
-  ;
+  `;
   return table;
 }
 
@@ -589,18 +594,16 @@ function makeLangTable(i) {
  ***************************************************/
 function docVal(id) {
   const el = document.getElementById(id);
-  return el ? el.value : "";
+  return el ? el.value : '';
 }
 function esc(str) {
-  return (str || "").replace(/[&<>"']/g, (s) =>
-    ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;",
-    }[s])
-  );
+  return (str || '').replace(/[&<>"']/g, s => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  })[s]);
 }
 function isOverflowAfterAppend(pageElem, blockElem) {
   pageElem.appendChild(blockElem);
@@ -612,16 +615,16 @@ function isOverflowAfterAppend(pageElem, blockElem) {
 /***************************************************
  * (N) PDFダウンロード処理
  ***************************************************/
-document.getElementById('download-pdf').addEventListener('click', async () => {
-  
-  // (A) まずスプレッドシートへ送信する
+async function handleDownloadPDF() {
+  console.log("[DEBUG] handleDownloadPDF: start...");
+
+  // 例: GASへ送信
   const sendData = {
     createdDate: window.currentDateString || "",
     name: docVal('input-name'),
-    tel:  docVal('input-tel'),
+    tel: docVal('input-tel'),
     mail: docVal('input-mail')
   };
-
   try {
     const response = await fetch(scriptURL, {
       method: 'POST',
@@ -629,29 +632,28 @@ document.getElementById('download-pdf').addEventListener('click', async () => {
       body: JSON.stringify(sendData)
     });
     const resultText = await response.text();
-    console.log("スプレッドシート送信結果:", resultText);
-  } catch(e) {
-    console.error("送信エラー:", e);
+    console.log("[DEBUG] スプレッドシート送信結果:", resultText);
+  } catch (e) {
+    console.error("[DEBUG] 送信エラー:", e);
   }
-
 
   // html2canvas + jsPDF でPDF生成
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("portrait", "pt", "a4");
-  const pages = document.querySelectorAll(".resume-page");
+  const pdf = new jsPDF('portrait', 'pt', 'a4');
+  const pages = document.querySelectorAll('.resume-page');
   for (let i = 0; i < pages.length; i++) {
     if (i > 0) pdf.addPage();
     const canvas = await html2canvas(pages[i], { scale: 2 });
-    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+    const imgData = canvas.toDataURL('image/jpeg', 1.0);
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const imgWidthPx = canvas.width;
     const imgHeightPx = canvas.height;
     const scale = pdfWidth / imgWidthPx;
     const imgHeightInPdf = imgHeightPx * scale;
-    pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, imgHeightInPdf);
+    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeightInPdf);
   }
-  pdf.save("職務経歴書.pdf");
-  alert("PDFダウンロードが開始されました！（GAS の応答は取得できません）");
+  pdf.save('職務経歴書.pdf');
+  alert("PDFダウンロードが開始されました！");
   console.log("[DEBUG] PDF download complete.");
 }

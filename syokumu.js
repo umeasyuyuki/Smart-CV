@@ -615,16 +615,16 @@ function isOverflowAfterAppend(pageElem, blockElem) {
 /***************************************************
  * (N) PDFダウンロード処理
  ***************************************************/
-async function handleDownloadPDF() {
-  console.log("[DEBUG] handleDownloadPDF: start...");
-
-  // 例: GASへ送信
+document.getElementById('download-pdf').addEventListener('click', async () => {
+  
+  // (A) まずスプレッドシートへ送信する
   const sendData = {
     createdDate: window.currentDateString || "",
     name: docVal('input-name'),
-    tel: docVal('input-tel'),
+    tel:  docVal('input-tel'),
     mail: docVal('input-mail')
   };
+
   try {
     const response = await fetch(scriptURL, {
       method: 'POST',
@@ -632,9 +632,9 @@ async function handleDownloadPDF() {
       body: JSON.stringify(sendData)
     });
     const resultText = await response.text();
-    console.log("[DEBUG] スプレッドシート送信結果:", resultText);
-  } catch (e) {
-    console.error("[DEBUG] 送信エラー:", e);
+    console.log("スプレッドシート送信結果:", resultText);
+  } catch(e) {
+    console.error("送信エラー:", e);
   }
 
   // html2canvas + jsPDF でPDF生成

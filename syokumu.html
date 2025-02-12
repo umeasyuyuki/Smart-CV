@@ -179,7 +179,7 @@
     </div><!-- /right -->
   </div><!-- /container -->
 
-  <!-- ==================== ここからコード2のJSをまとめて埋め込み ==================== -->
+  <!-- ==================== ここから「コード2」のJSをまとめて埋め込み ==================== -->
   <script>
   /***************************************************
    * (A) 連携先URLなどの設定 (例：実際には適宜修正)
@@ -354,12 +354,12 @@
     bindText("career1-capital");
     bindText("career1-market");
 
-    // ★ 免許・資格（初期表示分）★
+    // 免許・資格（初期表示分）
     bindText("license1-year");
     bindText("license1-month");
     bindText("license1-name");
 
-    // ★ 語学（初期表示分）★
+    // 語学（初期表示分）
     bindText("lang1-lang");
     bindText("lang1-level");
 
@@ -370,7 +370,7 @@
   }
 
   /***************************************************
-   * (F+) ★ テーブルの上線だけ消す関数を追加 ★
+   * (F+) テーブルの上線だけ消す関数
    ***************************************************/
   function removeTableTopLine(wrapperElem) {
     const tables = wrapperElem.querySelectorAll("table");
@@ -396,7 +396,6 @@
       addBtn.addEventListener("click", () => {
         careerCount++;
         const clone = firstBlock.cloneNode(true);
-        // ID再採番 + イベントリスナー
         clone.querySelectorAll('[id^="career1-"]').forEach((elem) => {
           const newId = elem.id.replace("career1-", `career${careerCount}-`);
           elem.id = newId;
@@ -803,11 +802,11 @@
 
     try {
       const response = await fetch(scriptURL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(data)
-    });
+        method: 'POST',
+        mode: 'no-cors', // レスポンスを受け取らずCORSエラーを回避
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(sendData)   // ← 修正: ここを sendData に変更
+      });
       const resultText = await response.text();
       console.log("スプレッドシート送信結果:", resultText);
     } catch (e) {

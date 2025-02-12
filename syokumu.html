@@ -161,13 +161,14 @@
       <div class="section-title">自己PR</div>
       <textarea class="simple-textarea" id="input-pr"></textarea>
 
-       <!-- PDFダウンロードボタンを中央寄せ -->
-  <div style="text-align: center; margin-top: 24px;">
-    <button id="download-pdf" style="padding:8px 16px; font-size:0.9rem; cursor:pointer; border-radius: 20px;">
-      PDFダウンロード
-    </button>
-  </div>
-</div>
+      <!-- PDFダウンロードボタンを中央寄せ -->
+      <div style="text-align: center; margin-top: 24px;">
+        <button id="download-pdf" style="padding:8px 16px; font-size:0.9rem; cursor:pointer; border-radius: 20px;">
+          PDFダウンロード
+        </button>
+      </div>
+
+    </div><!-- /left -->
 
     <!-- 右カラム（プレビュー） -->
     <div class="right">
@@ -177,7 +178,297 @@
     </div><!-- /right -->
   </div><!-- /container -->
 
-  <!-- JavaScriptファイル -->
-  <script src="syokumu.js"></script>
+  <!-- ★★★ ここから「コード2」のスクリプトを直接埋め込む ★★★ -->
+  <script>
+  /***************************************************
+   * (A) 連携先URLなどの設定 (例：実際には適宜修正)
+   ***************************************************/
+  const scriptURL = "https://script.google.com/macros/u/2/s/AKfycbzJCzE2eCpXSnKWU0Q3papybktyrrQV3h74tD0yZyHwTPwmkFZPwXJvGCzHhoXaH3dNOg/exec"; // Google Apps Scriptなど
+  const difyUploadURL = "https://api.dify.ai/v1/files/upload"; // 例
+  const difyAPIKey = "app-nec0NdADJDdpecQKQYvtxzmD"; // ダミーキー
+
+  /***************************************************
+   * (B) グローバル変数
+   ***************************************************/
+  let selectedFile = null; // ユーザーがアップロード選択したファイル
+  let uploadedFileURL = null; // 解析APIなどで生成されたファイルURLを格納
+
+  /***************************************************
+   * (C) ページ初期化
+   ***************************************************/
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log("[DEBUG] DOMContentLoaded: setting up...");
+
+    const today = new Date();
+    window.currentDateString = `${today.getFullYear()}年${String(today.getMonth()+1).padStart(2,'0')}月${String(today.getDate()).padStart(2,'0')}日`;
+
+    // イベントバインド等セットアップ
+    setupBindings();
+    updatePreviewPages();
+
+    // PDFダウンロード
+    const pdfBtn = document.getElementById("download-pdf");
+    if (pdfBtn) {
+      pdfBtn.addEventListener('click', handleDownloadPDF);
+    }
+
+    // ファイルアップロード
+    const fileInput = document.getElementById("resume-file");
+    if (fileInput) {
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          selectedFile = e.target.files[0];
+          alert("ファイルが選択されました: " + selectedFile.name);
+        }
+      });
+    }
+
+    // ダウンロードボタン（アップロード済みファイル）
+    const downloadBtn = document.getElementById("download-uploaded-file");
+    if (downloadBtn) {
+      downloadBtn.addEventListener("click", handleDownloadUploadedFile);
+    }
+
+    // 一括生成ボタン
+    const bulkBtn = document.getElementById("bulk-generate-btn");
+    if (bulkBtn) {
+      bulkBtn.addEventListener("click", handleBulkGenerate);
+    }
+
+    // 職務要約の文字数カウント
+    const summaryInput = document.getElementById("input-summary");
+    const charCounter  = document.getElementById("char-counter");
+    if (summaryInput && charCounter) {
+      summaryInput.addEventListener("input", () => {
+        const currentLength = summaryInput.value.length;
+        charCounter.textContent = `${currentLength} / 300字`;
+      });
+    }
+
+    console.log("[DEBUG] Initialization complete.");
+  });
+
+  /***************************************************
+   * (D) 一括生成する (例：API解析)
+   ***************************************************/
+  async function handleBulkGenerate() {
+    if (!selectedFile) {
+      alert("ファイルが選択されていません。");
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      // 例：Dify APIに送る場合
+      const response = await fetch(difyUploadURL, {
+        method: 'POST',
+        headers: { "x-api-key": difyAPIKey },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error("Difyへの送信に失敗: " + errText);
+      }
+
+      const result = await response.json();
+      console.log("[DEBUG] Dify解析結果:", result);
+
+      // APIの応答をフォームに反映（例）
+      if (result.fileURL) {
+        uploadedFileURL = result.fileURL;
+      }
+      if (result.name) {
+        document.getElementById("input-name").value = result.name;
+      }
+      if (result.tel) {
+        document.getElementById("input-tel").value = result.tel;
+      }
+      if (result.mail) {
+        document.getElementById("input-mail").value = result.mail;
+      }
+      if (result.summary) {
+        document.getElementById("input-summary").value = result.summary;
+      }
+
+      updatePreviewPages();
+      alert("Dify解析結果をフォームに反映しました。");
+    } catch (error) {
+      console.error("[DEBUG] handleBulkGenerate error:", error);
+      alert("エラーが発生しました: " + error.message);
+    }
+  }
+
+  /***************************************************
+   * (E) アップロード済みファイルのダウンロード (例)
+   ***************************************************/
+  function handleDownloadUploadedFile() {
+    if (!uploadedFileURL) {
+      alert("まだファイルがアップロードされていません。");
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = uploadedFileURL;
+    a.download = "";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  /***************************************************
+   * (F) 入力フォームとプレビュー更新バインド
+   ***************************************************/
+  function setupBindings() {
+    function bindText(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("input", updatePreviewPages);
+    }
+
+    // 基本情報
+    bindText("input-name");
+    bindText("input-tel");
+    bindText("input-mail");
+
+    // 職務要約
+    bindText("input-summary");
+
+    // 活かせる経験・知識・技術, 自己PR
+    bindText("input-skill");
+    bindText("input-pr");
+
+    // 職歴（1つ目）
+    bindText("career1-period");
+    bindText("career1-company");
+    bindText("career1-employment");
+    bindText("career1-position");
+    bindText("career1-business");
+    bindText("career1-duty");
+    bindText("career1-achievement");
+    bindText("career1-empcount");
+    bindText("career1-capital");
+    bindText("career1-market");
+
+    // ★ 免許・資格（初期表示分）★
+    bindText("license1-year");
+    bindText("license1-month");
+    bindText("license1-name");
+
+    // ★ 語学（初期表示分）★
+    bindText("lang1-lang");
+    bindText("lang1-level");
+
+    // 職歴・免許・語学の追加/削除 (すでに定義済み)
+    setupAddRemoveCareer();
+    setupAddRemoveLicense();
+    setupAddRemoveLang();
+  }
+
+  /***************************************************
+   * (F+) ★ テーブルの上線だけ消す関数を追加 ★
+   ***************************************************/
+  function removeTableTopLine(wrapperElem) {
+    const tables = wrapperElem.querySelectorAll("table");
+    tables.forEach(table => {
+      table.style.borderTop = "none";
+    });
+  }
+
+  /***************************************************
+   * (G) 職歴・免許・語学の 追加/削除
+   ***************************************************/
+  // ▼ 職歴 (同上: setupAddRemoveCareer)
+  let careerCount = 1;
+  function setupAddRemoveCareer() { /* ...省略（コードは上と同じ）... */ }
+
+  // ▼ 免許・資格
+  let licenseCount = 1;
+  function setupAddRemoveLicense() { /* ...省略（コードは上と同じ）... */ }
+
+  // ▼ 語学
+  let langCount = 1;
+  function setupAddRemoveLang() { /* ...省略（コードは上と同じ）... */ }
+
+  /***************************************************
+   * (H) 右カラムのプレビュー生成
+   ***************************************************/
+  function updatePreviewPages() { /* ...省略（コードは上と同じ）... */ }
+
+  /***************************************************
+   * (I) タイトルブロック
+   ***************************************************/
+  function makeTitleBlock() { /* ...省略（コードは上と同じ）... */ }
+  function makeSectionTitle(txt) { /* ...省略（コードは上と同じ）... */ }
+
+  /***************************************************
+   * (J) 職歴ブロック
+   ***************************************************/
+  function makeCareerBlock(i) { /* ...省略（コードは上と同じ）... */ }
+
+  /***************************************************
+   * (K) 免許・資格テーブル
+   ***************************************************/
+  function makeLicenseTable(i) { /* ...省略（コードは上と同じ）... */ }
+
+  /***************************************************
+   * (L) 語学テーブル
+   ***************************************************/
+  function makeLangTable(i) { /* ...省略（コードは上と同じ）... */ }
+
+  /***************************************************
+   * (M) 補助関数
+   ***************************************************/
+  function docVal(id) { /* ...省略（コードは上と同じ）... */ }
+  function esc(str) { /* ...省略（コードは上と同じ）... */ }
+  function isOverflowAfterAppend(pageElem, blockElem) { /* ...省略（コードは上と同じ）... */ }
+
+  /***************************************************
+   * (N) PDFダウンロード処理
+   ***************************************************/
+  document.getElementById('download-pdf').addEventListener('click', async () => {
+    // (A) まずスプレッドシートへ送信する
+    const sendData = {
+      createdDate: window.currentDateString || "",
+      name: docVal('input-name'),
+      tel:  docVal('input-tel'),
+      mail: docVal('input-mail')
+    };
+
+    try {
+      const response = await fetch(scriptURL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(sendData)
+      });
+      const resultText = await response.text();
+      console.log("スプレッドシート送信結果:", resultText);
+    } catch(e) {
+      console.error("送信エラー:", e);
+    }
+
+    // (B) PDFをダウンロードする処理
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('portrait', 'pt', 'a4'); 
+    const pages = document.querySelectorAll('.resume-page');
+
+    for(let i=0; i<pages.length; i++){
+      if(i>0) pdf.addPage();
+      const canvas = await html2canvas(pages[i], { scale: 2 });
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+
+      const pdfWidth  = pdf.internal.pageSize.getWidth();  
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidthPx  = canvas.width;
+      const imgHeightPx = canvas.height;
+      const scale = pdfWidth / imgWidthPx;
+      const imgHeightInPdf = imgHeightPx * scale;
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeightInPdf);
+    }
+    pdf.save('職務経歴書.pdf');
+    alert("PDFダウンロードが開始されました！");
+    console.log("[DEBUG] PDF download complete.");
+  });
+  </script>
 </body>
 </html>

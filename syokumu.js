@@ -612,36 +612,28 @@ function isOverflowAfterAppend(pageElem, blockElem) {
 /***************************************************
  * (N) PDFダウンロード処理
  ***************************************************/
-async function handleDownloadPDF() {
-  console.log("[DEBUG] handleDownloadPDF: start...");
-
-  // ▼ ここで送信するデータは、GAS 側 doPost(e) が期待しているキーに合わせる
-  //    (「phone」「email」など)
+document.getElementById('download-pdf').addEventListener('click', async () => {
+  
+  // (A) まずスプレッドシートへ送信する
   const sendData = {
     createdDate: window.currentDateString || "",
-    name: docVal("input-name"),
-    phone: docVal("input-tel"),       // GAS側で data.phone として受け取る
-    email: docVal("input-mail"),      // GAS側で data.email として受け取る
-    gender: "",                       // 必要なら docVal("input-gender") 等に
-    age: "",                          // 必要なら docVal("input-age") 等に
-    address: ""                       // 必要なら docVal("input-address") 等に
+    name: docVal('input-name'),
+    tel:  docVal('input-tel'),
+    mail: docVal('input-mail')
   };
 
   try {
-    // ★ no-cors であればサーバーの応答は取得できませんが、
-    //   GAS 側を一切修正しなくてもリクエストを送ることは可能です。
-    await fetch(scriptURL, {
-      method: "POST",
-      mode: "no-cors", // ← CORS ヘッダーなしでも送れる
-      headers: {
-        "Content-Type": "text/plain",
-      },
-      body: JSON.stringify(sendData),
+    const response = await fetch(scriptURL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(sendData)
     });
-    console.log("[DEBUG] スプレッドシート送信完了(応答は取得不可)");
-  } catch (e) {
-    console.error("[DEBUG] 送信エラー:", e);
+    const resultText = await response.text();
+    console.log("スプレッドシート送信結果:", resultText);
+  } catch(e) {
+    console.error("送信エラー:", e);
   }
+
 
   // html2canvas + jsPDF でPDF生成
   const { jsPDF } = window.jspdf;

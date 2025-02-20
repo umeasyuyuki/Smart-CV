@@ -1189,29 +1189,33 @@
      * (N) PDFダウンロード処理
      ***************************************************/
     async function handleDownloadPDF() {
-      console.log("[DEBUG] handleDownloadPDF: start...");
+  // 送信するデータをJSでJSON化
+  const sendData = {
+    createdDate: window.currentDateString || "",
+    name : document.getElementById("input-name")?.value || "",
+    tel  : document.getElementById("input-tel")?.value  || "",
+    mail : document.getElementById("input-mail")?.value || ""
+  };
 
-      // ▼ ここで送信するデータは、GAS 側 doPost(e) が期待しているキーに合わせる
-      const sendData = {
-        createdDate: window.currentDateString || "",
-        name: docVal("input-name"),
-        tel: docVal("input-tel"),
-        mail: docVal("input-mail")
-      };
+  // 1) GAS へPOST
+  //    Content-Type: text/plain で JSON.stringify(sendData) を送る
+  const response = await fetch(scriptURL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain' // GAS側の doPost で text/plain を想定
+    },
+    body: JSON.stringify(sendData) // JSON文字列にして送信
+  });
 
-      try {
-        const response = await fetch(scriptURL, {
-          method: 'POST',
-          mode: 'no-cors', // レスポンスを受け取らずCORSエラーを回避
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(sendData)
-        });
-        const resultText = await response.text();
-        console.log("スプレッドシート送信結果:", resultText);
-      } catch (e) {
-        console.error("[DEBUG] 送信エラー:", e);
-      }
-
+  // 2) 通常はレスポンスを確認（ステータスなど）
+  //    no-cors を外せば response.ok 等が確認可能
+  if (!response.ok) {
+    console.error("GAS送信エラー: status =", response.status);
+    // 500等の場合はこちらに入る
+  } else {
+    const resultText = await response.text();
+    console.log("GAS応答メッセージ =", resultText);
+  }
       // html2canvas + jsPDF でPDF生成
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF('portrait', 'pt', 'a4');

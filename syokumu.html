@@ -4,12 +4,415 @@
   <meta charset="UTF-8">
   <title>職務経歴書 入力フォーム＋プレビュー</title>
 
-  <!-- 外部CSS -->
-  <link rel="stylesheet" href="syokumu.css">
-  
-  <!-- html2canvas と jsPDF をCDNから読み込み -->
+  <!-- ◆ ここにCSSをまとめて埋め込む -->
+  <style>
+    /* リセット・共通スタイル */
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-size: 11pt;
+      height: 100%;
+      color: #000;
+      font-family: sans-serif;
+    }
+
+    /* 全体レイアウト */
+    .container {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .left {
+      background: #f7f9fc;
+      border-right: 1px solid #ccc;
+      padding-left: 20px;
+      padding-right: 20px;
+      padding-bottom: 20px;
+      overflow-y: auto;
+      width: 50%;
+    }
+    .right {
+      background: #9e9999;
+      overflow-x: hidden;
+      width: 50%;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    /* 左画面内の入力欄に角丸を適用 */
+    .left input[type="text"],
+    .left textarea,
+    .left select {
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    /* ヘッダー */
+    .header-left {
+      background-color: #fff;
+      margin-left: -20px;
+      margin-right: -20px;
+      margin-top: -20px;
+      text-align: center;
+      border-bottom: 1px solid #ccc;
+      padding: 0;
+      margin-bottom: 20px;
+    }
+    .header-left h1 {
+      padding-top: 20px;
+      padding-bottom: 0;
+    }
+    .header-left .smart {
+      color: #000;
+      font-family: "Istok Web", sans-serif;
+      font-size: 40px;
+    }
+    .header-left .dash {
+      font-family: "Istok Web", sans-serif;
+      font-size: 40px;
+      margin: 0 5px;
+    }
+    .header-left .cv {
+      color: #2cddb4;
+      font-family: "Istok Web", sans-serif;
+      font-size: 40px;
+    }
+    .header-left h2 {
+      font-family: "Istok Web", sans-serif;
+      font-size: 18px;
+      color: #333;
+    }
+
+    /* 選択ガイドのテーブル */
+    .choice-box {
+      border: 1px solid #000;
+      margin: 0 auto;
+      margin-top: 40px;
+      text-align: left;
+      font-size: 20px;
+      color: #000;
+    }
+    .first-box {
+      border: 1px solid #000;
+      margin: 0 auto;
+      height: 10%;
+      margin-top: 60px;
+      text-align: center;
+      border-radius: 100px;
+      font-size: 24px;
+      color: #000;
+      background-color: #d8fff9;
+    }
+    .second-box {
+      border: 1px solid #000;
+      margin: 0 auto;
+      height: 10%;
+      margin-top: 60px;
+      text-align: center;
+      border-radius: 100px;
+      font-size: 24px;
+      color: #000;
+      background-color: #d8fff9;
+    }
+
+    /* アップロード */
+    .upload-wrapper {
+      margin-bottom: 20px;
+      margin-left: 80px;
+    }
+    .upload-label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+      font-size: 19.5px;
+    }
+    .upload-area {
+      border: 2px dashed #ccc;
+      border-radius: 6px;
+      padding: 20px;
+      cursor: pointer;
+      transition: border-color 0.3s, background-color 0.3s;
+      height: 110px;
+      width: 53%;
+      margin: 0 auto;
+      text-align: center;
+      margin-left: 28px;
+    }
+    .upload-text {
+      color: #888;
+      font-size: 0.9rem;
+    }
+    .upload-area:hover {
+      border-color: #aaa;
+      background-color: #f8f8f8;
+    }
+
+    /* セクション見出し */
+    .section-title {
+      margin-top: 25px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-bottom: 2px solid #2c3e50;
+      padding-bottom: 5px;
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+
+    /* フォーム関連 */
+    .form-group {
+      margin: 30px 0 0 80px;
+      font-size: 20px;
+      width: 75%;
+    }
+    .form-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .form-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      font-weight: bold;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+    }
+    input[type="text"] {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      transition: box-shadow 0.2s;
+    }
+    input[type="text"]:focus {
+      border-color: #80bdff;
+      box-shadow: 0 0 4px rgba(0,123,255,0.3);
+      outline: none;
+    }
+    .simple-textarea {
+      width: 100%;
+      min-height: 80px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      padding: 8px;
+      font-size: 0.9rem;
+      resize: vertical;
+      margin-bottom: 16px;
+      transition: box-shadow 0.2s;
+      outline: none;
+    }
+    .simple-textarea:focus {
+      border-color: #80bdff;
+      box-shadow: 0 0 4px rgba(0,123,255,0.3);
+    }
+
+    /* ボタン */
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .btn-group button,
+    #download-pdf,
+    #download-uploaded-file {
+      padding: 6px 12px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+
+    /* 追加・削除ボタン */
+    #add-career-row,
+    #add-license-row,
+    #add-lang-row {
+      background-color: #007bff;
+      color: #fff;
+      border-color: #007bff;
+    }
+    #add-career-row:hover,
+    #add-license-row:hover,
+    #add-lang-row:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+    #remove-career-row,
+    #remove-license-row,
+    #remove-lang-row {
+      background-color: #dc3545;
+      color: #fff;
+      border-color: #dc3545;
+    }
+    #remove-career-row:hover,
+    #remove-license-row:hover,
+    #remove-lang-row:hover {
+      background-color: #c82333;
+      border-color: #bd2130;
+    }
+
+    /* 一括生成ボタン */
+    #bulk-generate-btn {
+      display: block;
+      margin: 10px auto;
+      background-color: #007bff;
+      color: #fff;
+      border: 1px solid #007bff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s, border-color 0.2s;
+      margin-left: 110px;
+    }
+    #bulk-generate-btn:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+
+    /* プレビュー (A4固定) */
+    .resume-pages-wrap {
+      /* 動的に .resume-page が追加されます */
+    }
+    .resume-page {
+      width: 210mm;
+      height: 297mm; /* A4縦 */
+      margin: 0 auto 20px;
+      padding: 10mm;
+      box-sizing: border-box;
+      background: #fff;
+    }
+
+    /* タイトル */
+    .preview-title {
+      text-align: center;
+      font-size: 16pt;
+      font-weight: bold;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    .top-right {
+      text-align: right;
+      margin-bottom: 10px;
+    }
+
+    /* セクションタイトル */
+    .preview-section-title {
+      font-weight: bold;
+      font-size: 12pt;
+      margin: 10px 0 5px;
+      text-decoration: underline;
+    }
+
+    /* 職務要約部分 */
+    .summary-block {
+      width: 100%;
+      overflow-y: hidden;
+      overflow-x: hidden;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      box-sizing: border-box;
+    }
+    #input-summary {
+      overflow: hidden;
+      resize: none;
+    }
+
+    /* 免許・資格テーブル */
+    .license-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin-bottom: 0px;
+    }
+    .license-table th {
+      border: 1px solid #000;
+      padding: 2px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .license-table td {
+      border: 1px solid #000;
+      padding: 2px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    /* 語学テーブル */
+    .lang-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin-bottom: 0px;
+    }
+    .lang-table th {
+      border: 1px solid #000;
+      padding: 2px;
+      text-align: center;
+      vertical-align: middle;
+      width: 15mm;
+    }
+    .lang-table td {
+      border: 1px solid #000;
+      padding: 2px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    /* 追加ブロックの区切り線 */
+    #career-container .sub-section,
+    #license-container .sub-section,
+    #lang-container .sub-section {
+      border-top: 1px solid #000;
+      margin-top: 10px;
+      padding-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    /* 「期間／業務内容」テーブル */
+    .career-format-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+    }
+    .career-format-table th,
+    .career-format-table td {
+      border: 1px solid #000;
+      padding: 8px;
+      vertical-align: top;
+      word-wrap: break-word;
+    }
+    /* ▼ ヘッダー行をグレーにする ▼ */
+    .career-format-table thead th {
+      background-color: #D9D9D9;
+    }
+
+    /* PDFダウンロードボタン等 */
+    #download-pdf {
+      background-color: #28a745;
+      color: #fff;
+      border-color: #28a745;
+      margin-left: 0 auto;
+    }
+    #download-pdf:hover {
+      background-color: #218838;
+      border-color: #1e7e34;
+      margin-left: 0 auto;
+    }
+  </style>
+
+  <!-- ◆ html2canvas と jsPDF をCDNから読み込み（外部ライブラリ） -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
 </head>
 <body>
   <div class="container">
@@ -179,662 +582,659 @@
     </div><!-- /right -->
   </div><!-- /container -->
 
-  <!-- ==================== ここから「コード2」のJSをまとめて埋め込み ==================== -->
+
+  <!-- ==================== ここからJSをまとめて埋め込み ==================== -->
   <script>
-  /***************************************************
-   * (A) 連携先URLなどの設定 (例：実際には適宜修正)
-   ***************************************************/
-  const scriptURL =
-    "https://script.google.com/macros/u/2/s/AKfycbzJCzE2eCpXSnKWU0Q3papybktyrrQV3h74tD0yZyHwTPwmkFZPwXJvGCzHhoXaH3dNOg/exec"; // Google Apps Scriptなど
-  const difyUploadURL = "https://api.dify.ai/v1/files/upload"; // 例
-  const difyAPIKey = "app-nec0NdADJDdpecQKQYvtxzmD"; // ダミーキー
+    /***************************************************
+     * (A) 連携先URLなどの設定 (例：実際には適宜修正)
+     ***************************************************/
+    const scriptURL      = "https://script.google.com/macros/u/2/s/AKfycbzJCzE2eCpXSnKWU0Q3papybktyrrQV3h74tD0yZyHwTPwmkFZPwXJvGCzHhoXaH3dNOg/exec"; 
+    const difyUploadURL  = "https://api.dify.ai/v1/files/upload"; // 例
+    const difyAPIKey     = "app-nec0NdADJDdpecQKQYvtxzmD";        // ダミーキー
 
-  /***************************************************
-   * (B) グローバル変数
-   ***************************************************/
-  let selectedFile = null;      // ユーザーがアップロード選択したファイル
-  let uploadedFileURL = null;   // 解析APIなどで生成されたファイルURLを格納
+    /***************************************************
+     * (B) グローバル変数
+     ***************************************************/
+    let selectedFile = null;      // ユーザーがアップロード選択したファイル
+    let uploadedFileURL = null;   // 解析APIなどで生成されたファイルURLを格納
 
-  /***************************************************
-   * (C) ページ初期化
-   ***************************************************/
-  document.addEventListener("DOMContentLoaded", () => {
-    console.log("[DEBUG] DOMContentLoaded: setting up...");
+    /***************************************************
+     * (C) ページ初期化
+     ***************************************************/
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log("[DEBUG] DOMContentLoaded: setting up...");
 
-    const today = new Date();
-    window.currentDateString = `${today.getFullYear()}年${String(
-      today.getMonth() + 1
-    ).padStart(2, "0")}月${String(today.getDate()).padStart(2, "0")}日`;
+      const today = new Date();
+      window.currentDateString = `${today.getFullYear()}年${String(today.getMonth()+1).padStart(2,'0')}月${String(today.getDate()).padStart(2,'0')}日`;
 
-    // イベントバインド等セットアップ
-    setupBindings();
-    updatePreviewPages();
-
-    // PDFダウンロード
-    const pdfBtn = document.getElementById("download-pdf");
-    if (pdfBtn) {
-      pdfBtn.addEventListener("click", handleDownloadPDF);
-    }
-
-    // ファイルアップロード
-    const fileInput = document.getElementById("resume-file");
-    if (fileInput) {
-      fileInput.addEventListener("change", (e) => {
-        if (e.target.files && e.target.files.length > 0) {
-          selectedFile = e.target.files[0];
-          alert("ファイルが選択されました: " + selectedFile.name);
-        }
-      });
-    }
-
-    // ダウンロードボタン（アップロード済みファイル）
-    const downloadBtn = document.getElementById("download-uploaded-file");
-    if (downloadBtn) {
-      downloadBtn.addEventListener("click", handleDownloadUploadedFile);
-    }
-
-    // 一括生成ボタン
-    const bulkBtn = document.getElementById("bulk-generate-btn");
-    if (bulkBtn) {
-      bulkBtn.addEventListener("click", handleBulkGenerate);
-    }
-
-    // 職務要約の文字数カウント
-    const summaryInput = document.getElementById("input-summary");
-    const charCounter = document.getElementById("char-counter");
-    if (summaryInput && charCounter) {
-      summaryInput.addEventListener("input", () => {
-        const currentLength = summaryInput.value.length;
-        charCounter.textContent = `${currentLength} / 300字`;
-      });
-    }
-
-    console.log("[DEBUG] Initialization complete.");
-  });
-
-  /***************************************************
-   * (D) 一括生成する (例：API解析)
-   ***************************************************/
-  async function handleBulkGenerate() {
-    if (!selectedFile) {
-      alert("ファイルが選択されていません。");
-      return;
-    }
-    try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-
-      // 例：Dify APIに送る場合
-      const response = await fetch(difyUploadURL, {
-        method: "POST",
-        headers: { "x-api-key": difyAPIKey },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error("Difyへの送信に失敗: " + errText);
-      }
-
-      const result = await response.json();
-      console.log("[DEBUG] Dify解析結果:", result);
-
-      // APIの応答をフォームに反映（例）
-      if (result.fileURL) {
-        uploadedFileURL = result.fileURL;
-      }
-      if (result.name) {
-        document.getElementById("input-name").value = result.name;
-      }
-      if (result.tel) {
-        document.getElementById("input-tel").value = result.tel;
-      }
-      if (result.mail) {
-        document.getElementById("input-mail").value = result.mail;
-      }
-      if (result.summary) {
-        document.getElementById("input-summary").value = result.summary;
-      }
-
+      // イベントバインド等セットアップ
+      setupBindings();
       updatePreviewPages();
-      alert("Dify解析結果をフォームに反映しました。");
-    } catch (error) {
-      console.error("[DEBUG] handleBulkGenerate error:", error);
-      alert("エラーが発生しました: " + error.message);
-    }
-  }
 
-  /***************************************************
-   * (E) アップロード済みファイルのダウンロード (例)
-   ***************************************************/
-  function handleDownloadUploadedFile() {
-    if (!uploadedFileURL) {
-      alert("まだファイルがアップロードされていません。");
-      return;
-    }
-    const a = document.createElement("a");
-    a.href = uploadedFileURL;
-    a.download = "";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }
+      // PDFダウンロード
+      const pdfBtn = document.getElementById("download-pdf");
+      if (pdfBtn) {
+        pdfBtn.addEventListener('click', handleDownloadPDF);
+      }
 
-  /***************************************************
-   * (F) 入力フォームとプレビュー更新バインド
-   ***************************************************/
-  function setupBindings() {
-    function bindText(id) {
+      // ファイルアップロード
+      const fileInput = document.getElementById("resume-file");
+      if (fileInput) {
+        fileInput.addEventListener("change", (e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            selectedFile = e.target.files[0];
+            alert("ファイルが選択されました: " + selectedFile.name);
+          }
+        });
+      }
+
+      // ダウンロードボタン（アップロード済みファイル）
+      const downloadBtn = document.getElementById("download-uploaded-file");
+      if (downloadBtn) {
+        downloadBtn.addEventListener("click", handleDownloadUploadedFile);
+      }
+
+      // 一括生成ボタン
+      const bulkBtn = document.getElementById("bulk-generate-btn");
+      if (bulkBtn) {
+        bulkBtn.addEventListener("click", handleBulkGenerate);
+      }
+
+      // 職務要約の文字数カウント
+      const summaryInput = document.getElementById("input-summary");
+      const charCounter  = document.getElementById("char-counter");
+      if (summaryInput && charCounter) {
+        summaryInput.addEventListener("input", () => {
+          const currentLength = summaryInput.value.length;
+          charCounter.textContent = `${currentLength} / 300字`;
+        });
+      }
+
+      console.log("[DEBUG] Initialization complete.");
+    });
+
+    /***************************************************
+     * (D) 一括生成する (例：API解析)
+     ***************************************************/
+    async function handleBulkGenerate() {
+      if (!selectedFile) {
+        alert("ファイルが選択されていません。");
+        return;
+      }
+      try {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        // 例：Dify APIに送る場合
+        const response = await fetch(difyUploadURL, {
+          method: 'POST',
+          headers: { "x-api-key": difyAPIKey },
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error("Difyへの送信に失敗: " + errText);
+        }
+
+        const result = await response.json();
+        console.log("[DEBUG] Dify解析結果:", result);
+
+        // APIの応答をフォームに反映（例）
+        if (result.fileURL) {
+          uploadedFileURL = result.fileURL;
+        }
+        if (result.name) {
+          document.getElementById("input-name").value = result.name;
+        }
+        if (result.tel) {
+          document.getElementById("input-tel").value = result.tel;
+        }
+        if (result.mail) {
+          document.getElementById("input-mail").value = result.mail;
+        }
+        if (result.summary) {
+          document.getElementById("input-summary").value = result.summary;
+        }
+
+        updatePreviewPages();
+        alert("Dify解析結果をフォームに反映しました。");
+      } catch (error) {
+        console.error("[DEBUG] handleBulkGenerate error:", error);
+        alert("エラーが発生しました: " + error.message);
+      }
+    }
+
+    /***************************************************
+     * (E) アップロード済みファイルのダウンロード (例)
+     ***************************************************/
+    function handleDownloadUploadedFile() {
+      if (!uploadedFileURL) {
+        alert("まだファイルがアップロードされていません。");
+        return;
+      }
+      const a = document.createElement('a');
+      a.href = uploadedFileURL;
+      a.download = "";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    /***************************************************
+     * (F) 入力フォームとプレビュー更新バインド
+     ***************************************************/
+    function setupBindings() {
+      function bindText(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("input", updatePreviewPages);
+      }
+
+      // 基本情報
+      bindText("input-name");
+      bindText("input-tel");
+      bindText("input-mail");
+
+      // 職務要約
+      bindText("input-summary");
+
+      // 活かせる経験・知識・技術, 自己PR
+      bindText("input-skill");
+      bindText("input-pr");
+
+      // 職歴（1つ目）
+      bindText("career1-period");
+      bindText("career1-company");
+      bindText("career1-employment");
+      bindText("career1-position");
+      bindText("career1-business");
+      bindText("career1-duty");
+      bindText("career1-achievement");
+      bindText("career1-empcount");
+      bindText("career1-capital");
+      bindText("career1-market");
+
+      // 免許・資格（初期表示分）
+      bindText("license1-year");
+      bindText("license1-month");
+      bindText("license1-name");
+
+      // 語学（初期表示分）
+      bindText("lang1-lang");
+      bindText("lang1-level");
+
+      // 職歴・免許・語学の追加/削除
+      setupAddRemoveCareer();
+      setupAddRemoveLicense();
+      setupAddRemoveLang();
+    }
+
+    /***************************************************
+     * (F+) テーブルの上線だけ消す関数
+     ***************************************************/
+    function removeTableTopLine(wrapperElem) {
+      const tables = wrapperElem.querySelectorAll("table");
+      tables.forEach(table => {
+        table.style.borderTop = "none";
+      });
+    }
+
+    /***************************************************
+     * (G) 職歴・免許・語学の 追加/削除
+     ***************************************************/
+    // ▼ 職歴
+    let careerCount = 1;
+    function setupAddRemoveCareer() {
+      const addBtn = document.getElementById("add-career-row");
+      const removeBtn = document.getElementById("remove-career-row");
+      const container = document.getElementById("career-container");
+      const firstBlock = document.getElementById("career-first");
+
+      removeTableTopLine(firstBlock);
+
+      if (addBtn) {
+        addBtn.addEventListener("click", () => {
+          careerCount++;
+          const clone = firstBlock.cloneNode(true);
+          clone.querySelectorAll('[id^="career1-"]').forEach(elem => {
+            const newId = elem.id.replace("career1-", `career${careerCount}-`);
+            elem.id = newId;
+            elem.value = "";
+            elem.addEventListener("input", updatePreviewPages);
+          });
+
+          let wrapper = document.createElement("div");
+          wrapper.className = "sub-section";
+          wrapper.style.borderTop = "1px solid #000";
+          wrapper.style.marginTop = "10px";
+          wrapper.style.paddingTop = "10px";
+          wrapper.style.marginBottom = "10px";
+
+          wrapper.appendChild(clone);
+          container.appendChild(wrapper);
+
+          removeTableTopLine(wrapper);
+          updatePreviewPages();
+        });
+      }
+
+      if (removeBtn) {
+        removeBtn.addEventListener("click", () => {
+          if (container.children.length > 1) {
+            container.removeChild(container.lastElementChild);
+            careerCount--;
+          } else {
+            firstBlock.querySelectorAll('[id^="career1-"]').forEach(elem => {
+              elem.value = "";
+            });
+          }
+          updatePreviewPages();
+        });
+      }
+    }
+
+    // ▼ 免許・資格
+    let licenseCount = 1;
+    function setupAddRemoveLicense() {
+      const addBtn = document.getElementById('add-license-row');
+      const removeBtn = document.getElementById('remove-license-row');
+      const licenseContainer = document.getElementById('license-container');
+      const firstLicense = document.getElementById('license-first');
+
+      removeTableTopLine(firstLicense);
+
+      if (addBtn) {
+        addBtn.addEventListener('click', () => {
+          licenseCount++;
+          let clone = firstLicense.cloneNode(true);
+          clone.querySelectorAll('[id^="license1-"]').forEach(elem => {
+            let newId = elem.id.replace('license1-', `license${licenseCount}-`);
+            elem.id = newId;
+            elem.value = "";
+            elem.addEventListener('input', updatePreviewPages);
+          });
+          let wrapper = document.createElement('div');
+          wrapper.className = 'sub-section';
+          wrapper.style.borderTop = "1px solid #000";
+          wrapper.style.marginTop = "10px";
+          wrapper.style.paddingTop = "10px";
+          wrapper.style.marginBottom = "10px";
+
+          wrapper.appendChild(clone);
+          licenseContainer.appendChild(wrapper);
+
+          removeTableTopLine(wrapper);
+          updatePreviewPages();
+        });
+      }
+      if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+          if (licenseContainer.children.length > 1) {
+            licenseContainer.removeChild(licenseContainer.lastElementChild);
+            licenseCount--;
+          } else {
+            firstLicense.querySelectorAll('[id^="license1-"]').forEach(elem => {
+              elem.value = "";
+            });
+          }
+          updatePreviewPages();
+        });
+      }
+    }
+
+    // ▼ 語学
+    let langCount = 1;
+    function setupAddRemoveLang() {
+      const addBtn = document.getElementById('add-lang-row');
+      const removeBtn = document.getElementById('remove-lang-row');
+      const langContainer = document.getElementById('lang-container');
+      const firstLang = document.getElementById('lang-first');
+
+      removeTableTopLine(firstLang);
+
+      if (!addBtn || !removeBtn || !langContainer || !firstLang) return;
+
+      addBtn.addEventListener('click', () => {
+        langCount++;
+        let clone = firstLang.cloneNode(true);
+        clone.querySelectorAll('[id^="lang1-"]').forEach(elem => {
+          let newId = elem.id.replace('lang1-', `lang${langCount}-`);
+          elem.id = newId;
+          elem.value = "";
+          elem.addEventListener('input', updatePreviewPages);
+        });
+        let wrapper = document.createElement('div');
+        wrapper.className = 'sub-section';
+        wrapper.style.borderTop = "1px solid #000";
+        wrapper.style.marginTop = "10px";
+        wrapper.style.paddingTop = "10px";
+        wrapper.style.marginBottom = "10px";
+
+        wrapper.appendChild(clone);
+        langContainer.appendChild(wrapper);
+
+        removeTableTopLine(wrapper);
+        updatePreviewPages();
+      });
+
+      removeBtn.addEventListener('click', () => {
+        if (langContainer.children.length > 1) {
+          langContainer.removeChild(langContainer.lastElementChild);
+          langCount--;
+        } else {
+          firstLang.querySelectorAll('[id^="lang1-"]').forEach(elem => {
+            elem.value = "";
+          });
+        }
+        updatePreviewPages();
+      });
+    }
+
+    /***************************************************
+     * (H) 右カラムのプレビュー生成
+     ***************************************************/
+    function updatePreviewPages() {
+      const wrap = document.getElementById('resumePages');
+      if (!wrap) return;
+      wrap.innerHTML = '';
+
+      function createNewPage() {
+        const page = document.createElement('div');
+        page.className = 'resume-page';
+        wrap.appendChild(page);
+        return page;
+      }
+
+      let currentPage = createNewPage();
+
+      // タイトル & 基本情報
+      currentPage.appendChild(makeTitleBlock());
+
+      // 職務要約
+      currentPage.appendChild(makeSectionTitle('職務要約'));
+      {
+        const text = docVal('input-summary');
+        const summaryBlock = document.createElement('div');
+        summaryBlock.classList.add('summary-block');
+        summaryBlock.textContent = text;
+        if (isOverflowAfterAppend(currentPage, summaryBlock)) {
+          currentPage = createNewPage();
+          currentPage.appendChild(makeSectionTitle('職務要約'));
+        }
+        currentPage.appendChild(summaryBlock);
+      }
+
+      // 職歴
+      currentPage.appendChild(makeSectionTitle('職歴'));
+      for (let i = 1; i <= careerCount; i++) {
+        const block = makeCareerBlock(i);
+        if (isOverflowAfterAppend(currentPage, block)) {
+          currentPage = createNewPage();
+          currentPage.appendChild(makeSectionTitle('職歴'));
+        }
+        currentPage.appendChild(block);
+      }
+
+      // 免許・資格
+      currentPage.appendChild(makeSectionTitle('免許・資格'));
+      for (let i = 1; i <= licenseCount; i++) {
+        const table = makeLicenseTable(i);
+        table.classList.add("license-table");
+        if (isOverflowAfterAppend(currentPage, table)) {
+          currentPage = createNewPage();
+          currentPage.appendChild(makeSectionTitle('免許・資格'));
+        }
+        currentPage.appendChild(table);
+      }
+
+      // 語学
+      currentPage.appendChild(makeSectionTitle('語学'));
+      for (let i = 1; i <= langCount; i++) {
+        const table = makeLangTable(i);
+        table.classList.add("lang-table");
+        if (isOverflowAfterAppend(currentPage, table)) {
+          currentPage = createNewPage();
+          currentPage.appendChild(makeSectionTitle('語学'));
+        }
+        currentPage.appendChild(table);
+      }
+
+      // 活かせる経験・知識・技術
+      currentPage.appendChild(makeSectionTitle('活かせる経験・知識・技術'));
+      {
+        const text = docVal('input-skill');
+        const block = document.createElement('div');
+        block.style.whiteSpace = 'pre-wrap';
+        block.style.wordWrap = 'break-word';
+        block.textContent = text;
+        if (isOverflowAfterAppend(currentPage, block)) {
+          currentPage = createNewPage();
+          currentPage.appendChild(makeSectionTitle('活かせる経験・知識・技術'));
+        }
+        currentPage.appendChild(block);
+      }
+
+      // 自己PR
+      currentPage.appendChild(makeSectionTitle('自己PR'));
+      {
+        const text = docVal('input-pr');
+        const block = document.createElement('div');
+        block.style.whiteSpace = 'pre-wrap';
+        block.style.wordWrap = 'break-word';
+        block.textContent = text;
+        if (isOverflowAfterAppend(currentPage, block)) {
+          currentPage = createNewPage();
+          currentPage.appendChild(makeSectionTitle('自己PR'));
+        }
+        currentPage.appendChild(block);
+      }
+    }
+
+    /***************************************************
+     * (I) タイトルブロック
+     ***************************************************/
+    function makeTitleBlock() {
+      const nameVal = esc(docVal('input-name'));
+      const telVal  = esc(docVal('input-tel'));
+      const mailVal = esc(docVal('input-mail'));
+      const dateStr = window.currentDateString || '';
+
+      const container = document.createElement('div');
+      const titleEl = document.createElement('div');
+      titleEl.classList.add('preview-title');
+      titleEl.textContent = '職務経歴書';
+      container.appendChild(titleEl);
+
+      const infoEl = document.createElement('div');
+      infoEl.classList.add('top-right');
+      infoEl.innerHTML = `
+        <div>作成日: ${dateStr}</div>
+        <div>名前: ${nameVal}</div>
+        <div>Tel: ${telVal}</div>
+        <div>Mail: ${mailVal}</div>
+      `;
+      container.appendChild(infoEl);
+
+      return container;
+    }
+
+    function makeSectionTitle(txt) {
+      const d = document.createElement('div');
+      d.className = 'preview-section-title';
+      d.textContent = txt;
+      return d;
+    }
+
+    /***************************************************
+     * (J) 職歴ブロック
+     ***************************************************/
+    function makeCareerBlock(i) {
+      const period      = docVal(`career${i}-period`);
+      const company     = docVal(`career${i}-company`);
+      const employment  = docVal(`career${i}-employment`);
+      const position    = docVal(`career${i}-position`);
+      const business    = docVal(`career${i}-business`);
+      const duty        = docVal(`career${i}-duty`);
+      const achievement = docVal(`career${i}-achievement`);
+      const empcount    = docVal(`career${i}-empcount`);
+      const capital     = docVal(`career${i}-capital`);
+      const market      = docVal(`career${i}-market`);
+
+      const wrapper = document.createElement('div');
+      wrapper.style.marginBottom = '16px';
+
+      // 会社情報
+      const infoDiv = document.createElement('div');
+      infoDiv.style.marginBottom = '0px';
+      infoDiv.innerHTML = `
+        会社名： ${esc(company)}<br>
+        事業内容： ${esc(business)}<br>
+        資本金： ${esc(capital)}　従業員数： ${esc(empcount)}　株式市場： ${esc(market)}
+      `;
+      wrapper.appendChild(infoDiv);
+
+      // 期間／業務内容テーブル
+      const table = document.createElement('table');
+      table.classList.add('career-format-table');
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th style="width:25%">期間</th>
+            <th style="width:75%">業務内容</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              ${esc(period)}
+            </td>
+            <td>
+              雇用形態： ${esc(employment)}<br>
+              役職： ${esc(position)}<br>
+              実績： ${esc(achievement)}<br>
+              業務内容： ${esc(duty)}
+            </td>
+          </tr>
+        </tbody>
+      `;
+      wrapper.appendChild(table);
+
+      return wrapper;
+    }
+
+    /***************************************************
+     * (K) 免許・資格テーブル
+     ***************************************************/
+    function makeLicenseTable(i) {
+      const y  = docVal(`license${i}-year`);
+      const mo = docVal(`license${i}-month`);
+      const nm = docVal(`license${i}-name`);
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <tr>
+          <th>年</th>
+          <td style="width:25mm;">${esc(y)}</td>
+          <th>月</th>
+          <td style="width:25mm;">${esc(mo)}</td>
+          <th colspan="2" style="text-align:center;">免許・資格名</th>
+          <td colspan="3" style="height:auto;">${esc(nm)}</td>
+        </tr>
+      `;
+      return table;
+    }
+
+    /***************************************************
+     * (L) 語学テーブル
+     ***************************************************/
+    function makeLangTable(i) {
+      const l  = docVal(`lang${i}-lang`);
+      const lv = docVal(`lang${i}-level`);
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <tr>
+          <th>語学</th>
+          <td>${esc(l)}</td>
+          <th>レベル</th>
+          <td>${esc(lv)}</td>
+        </tr>
+      `;
+      return table;
+    }
+
+    /***************************************************
+     * (M) 補助関数
+     ***************************************************/
+    function docVal(id) {
       const el = document.getElementById(id);
-      if (!el) return;
-      el.addEventListener("input", updatePreviewPages);
+      return el ? el.value : '';
+    }
+    function esc(str) {
+      return (str || '').replace(/[&<>"']/g, s => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      })[s]);
+    }
+    function isOverflowAfterAppend(pageElem, blockElem) {
+      pageElem.appendChild(blockElem);
+      const isOverflow = pageElem.scrollHeight > pageElem.clientHeight;
+      pageElem.removeChild(blockElem);
+      return isOverflow;
     }
 
-    // 基本情報
-    bindText("input-name");
-    bindText("input-tel");
-    bindText("input-mail");
+    /***************************************************
+     * (N) PDFダウンロード処理
+     ***************************************************/
+    async function handleDownloadPDF() {
+      console.log("[DEBUG] handleDownloadPDF: start...");
 
-    // 職務要約
-    bindText("input-summary");
+      // ▼ ここで送信するデータは、GAS 側 doPost(e) が期待しているキーに合わせる
+      const sendData = {
+        createdDate: window.currentDateString || "",
+        name: docVal("input-name"),
+        tel: docVal("input-tel"),
+        mail: docVal("input-mail")
+      };
 
-    // 活かせる経験・知識・技術, 自己PR
-    bindText("input-skill");
-    bindText("input-pr");
-
-    // 職歴（1つ目）
-    bindText("career1-period");
-    bindText("career1-company");
-    bindText("career1-employment");
-    bindText("career1-position");
-    bindText("career1-business");
-    bindText("career1-duty");
-    bindText("career1-achievement");
-    bindText("career1-empcount");
-    bindText("career1-capital");
-    bindText("career1-market");
-
-    // 免許・資格（初期表示分）
-    bindText("license1-year");
-    bindText("license1-month");
-    bindText("license1-name");
-
-    // 語学（初期表示分）
-    bindText("lang1-lang");
-    bindText("lang1-level");
-
-    // 職歴・免許・語学の追加/削除
-    setupAddRemoveCareer();
-    setupAddRemoveLicense();
-    setupAddRemoveLang();
-  }
-
-  /***************************************************
-   * (F+) テーブルの上線だけ消す関数
-   ***************************************************/
-  function removeTableTopLine(wrapperElem) {
-    const tables = wrapperElem.querySelectorAll("table");
-    tables.forEach((table) => {
-      table.style.borderTop = "none";
-    });
-  }
-
-  /***************************************************
-   * (G) 職歴・免許・語学の 追加/削除
-   ***************************************************/
-  // ▼ 職歴
-  let careerCount = 1;
-  function setupAddRemoveCareer() {
-    const addBtn = document.getElementById("add-career-row");
-    const removeBtn = document.getElementById("remove-career-row");
-    const container = document.getElementById("career-container");
-    const firstBlock = document.getElementById("career-first");
-
-    removeTableTopLine(firstBlock);
-
-    if (addBtn) {
-      addBtn.addEventListener("click", () => {
-        careerCount++;
-        const clone = firstBlock.cloneNode(true);
-        clone.querySelectorAll('[id^="career1-"]').forEach((elem) => {
-          const newId = elem.id.replace("career1-", `career${careerCount}-`);
-          elem.id = newId;
-          elem.value = "";
-          elem.addEventListener("input", updatePreviewPages);
+      try {
+        const response = await fetch(scriptURL, {
+          method: 'POST',
+          mode: 'no-cors', // レスポンスを受け取らずCORSエラーを回避
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify(sendData)
         });
-
-        let wrapper = document.createElement("div");
-        wrapper.className = "sub-section";
-        wrapper.style.borderTop = "1px solid #000";
-        wrapper.style.marginTop = "10px";
-        wrapper.style.paddingTop = "10px";
-        wrapper.style.marginBottom = "10px";
-
-        wrapper.appendChild(clone);
-        container.appendChild(wrapper);
-        removeTableTopLine(wrapper);
-
-        updatePreviewPages();
-      });
-    }
-
-    if (removeBtn) {
-      removeBtn.addEventListener("click", () => {
-        if (container.children.length > 1) {
-          container.removeChild(container.lastElementChild);
-          careerCount--;
-        } else {
-          firstBlock.querySelectorAll('[id^="career1-"]').forEach((elem) => {
-            elem.value = "";
-          });
-        }
-        updatePreviewPages();
-      });
-    }
-  }
-
-  // ▼ 免許・資格
-  let licenseCount = 1;
-  function setupAddRemoveLicense() {
-    const addBtn = document.getElementById("add-license-row");
-    const removeBtn = document.getElementById("remove-license-row");
-    const licenseContainer = document.getElementById("license-container");
-    const firstLicense = document.getElementById("license-first");
-
-    removeTableTopLine(firstLicense);
-
-    if (addBtn) {
-      addBtn.addEventListener("click", () => {
-        licenseCount++;
-        let clone = firstLicense.cloneNode(true);
-        clone.querySelectorAll('[id^="license1-"]').forEach((elem) => {
-          let newId = elem.id.replace("license1-", `license${licenseCount}-`);
-          elem.id = newId;
-          elem.value = "";
-          elem.addEventListener("input", updatePreviewPages);
-        });
-        let wrapper = document.createElement("div");
-        wrapper.className = "sub-section";
-        wrapper.style.borderTop = "1px solid #000";
-        wrapper.style.marginTop = "10px";
-        wrapper.style.paddingTop = "10px";
-        wrapper.style.marginBottom = "10px";
-
-        wrapper.appendChild(clone);
-        licenseContainer.appendChild(wrapper);
-        removeTableTopLine(wrapper);
-
-        updatePreviewPages();
-      });
-    }
-    if (removeBtn) {
-      removeBtn.addEventListener("click", () => {
-        if (licenseContainer.children.length > 1) {
-          licenseContainer.removeChild(licenseContainer.lastElementChild);
-          licenseCount--;
-        } else {
-          firstLicense.querySelectorAll('[id^="license1-"]').forEach((elem) => {
-            elem.value = "";
-          });
-        }
-        updatePreviewPages();
-      });
-    }
-  }
-
-  // ▼ 語学
-  let langCount = 1;
-  function setupAddRemoveLang() {
-    const addBtn = document.getElementById("add-lang-row");
-    const removeBtn = document.getElementById("remove-lang-row");
-    const langContainer = document.getElementById("lang-container");
-    const firstLang = document.getElementById("lang-first");
-
-    removeTableTopLine(firstLang);
-
-    if (!addBtn || !removeBtn || !langContainer || !firstLang) return;
-
-    addBtn.addEventListener("click", () => {
-      langCount++;
-      const clone = firstLang.cloneNode(true);
-      clone.querySelectorAll('[id^="lang1-"]').forEach((elem) => {
-        let newId = elem.id.replace("lang1-", `lang${langCount}-`);
-        elem.id = newId;
-        elem.value = "";
-        elem.addEventListener("input", updatePreviewPages);
-      });
-      let wrapper = document.createElement("div");
-      wrapper.className = "sub-section";
-      wrapper.style.borderTop = "1px solid #000";
-      wrapper.style.marginTop = "10px";
-      wrapper.style.paddingTop = "10px";
-      wrapper.style.marginBottom = "10px";
-
-      wrapper.appendChild(clone);
-      langContainer.appendChild(wrapper);
-      removeTableTopLine(wrapper);
-
-      updatePreviewPages();
-    });
-
-    removeBtn.addEventListener("click", () => {
-      if (langContainer.children.length > 1) {
-        langContainer.removeChild(langContainer.lastElementChild);
-        langCount--;
-      } else {
-        firstLang.querySelectorAll('[id^="lang1-"]').forEach((elem) => {
-          elem.value = "";
-        });
+        const resultText = await response.text();
+        console.log("スプレッドシート送信結果:", resultText);
+      } catch (e) {
+        console.error("[DEBUG] 送信エラー:", e);
       }
-      updatePreviewPages();
-    });
-  }
 
-  /***************************************************
-   * (H) 右カラムのプレビュー生成
-   ***************************************************/
-  function updatePreviewPages() {
-    const wrap = document.getElementById("resumePages");
-    if (!wrap) return;
-    wrap.innerHTML = "";
+      // html2canvas + jsPDF でPDF生成
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('portrait', 'pt', 'a4');
+      const pages = document.querySelectorAll('.resume-page');
 
-    function createNewPage() {
-      const page = document.createElement("div");
-      page.className = "resume-page";
-      wrap.appendChild(page);
-      return page;
-    }
+      for (let i = 0; i < pages.length; i++) {
+        if (i > 0) pdf.addPage();
+        const canvas = await html2canvas(pages[i], { scale: 2 });
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
 
-    let currentPage = createNewPage();
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidthPx = canvas.width;
+        const imgHeightPx = canvas.height;
+        const scale = pdfWidth / imgWidthPx;
+        const imgHeightInPdf = imgHeightPx * scale;
 
-    // タイトル & 基本情報
-    currentPage.appendChild(makeTitleBlock());
-
-    // 職務要約
-    currentPage.appendChild(makeSectionTitle("職務要約"));
-    {
-      const text = docVal("input-summary");
-      const summaryBlock = document.createElement("div");
-      summaryBlock.classList.add("summary-block");
-      summaryBlock.textContent = text;
-      if (isOverflowAfterAppend(currentPage, summaryBlock)) {
-        currentPage = createNewPage();
-        currentPage.appendChild(makeSectionTitle("職務要約"));
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeightInPdf);
       }
-      currentPage.appendChild(summaryBlock);
+      pdf.save("職務経歴書.pdf");
+      alert("PDFダウンロードが開始されました！（※GAS側がCORS非対応の場合、ブラウザ上でエラー表示される場合があります）");
+      console.log("[DEBUG] PDF download complete.");
     }
-
-    // 職歴
-    currentPage.appendChild(makeSectionTitle("職歴"));
-    for (let i = 1; i <= careerCount; i++) {
-      const block = makeCareerBlock(i);
-      if (isOverflowAfterAppend(currentPage, block)) {
-        currentPage = createNewPage();
-        currentPage.appendChild(makeSectionTitle("職歴"));
-      }
-      currentPage.appendChild(block);
-    }
-
-    // 免許・資格
-    currentPage.appendChild(makeSectionTitle("免許・資格"));
-    for (let i = 1; i <= licenseCount; i++) {
-      const table = makeLicenseTable(i);
-      table.classList.add("license-table");
-      if (isOverflowAfterAppend(currentPage, table)) {
-        currentPage = createNewPage();
-        currentPage.appendChild(makeSectionTitle("免許・資格"));
-      }
-      currentPage.appendChild(table);
-    }
-
-    // 語学
-    currentPage.appendChild(makeSectionTitle("語学"));
-    for (let i = 1; i <= langCount; i++) {
-      const table = makeLangTable(i);
-      table.classList.add("lang-table");
-      if (isOverflowAfterAppend(currentPage, table)) {
-        currentPage = createNewPage();
-        currentPage.appendChild(makeSectionTitle("語学"));
-      }
-      currentPage.appendChild(table);
-    }
-
-    // 活かせる経験・知識・技術
-    currentPage.appendChild(makeSectionTitle("活かせる経験・知識・技術"));
-    {
-      const text = docVal("input-skill");
-      const block = document.createElement("div");
-      block.style.whiteSpace = "pre-wrap";
-      block.style.wordWrap = "break-word";
-      block.textContent = text;
-      if (isOverflowAfterAppend(currentPage, block)) {
-        currentPage = createNewPage();
-        currentPage.appendChild(makeSectionTitle("活かせる経験・知識・技術"));
-      }
-      currentPage.appendChild(block);
-    }
-
-    // 自己PR
-    currentPage.appendChild(makeSectionTitle("自己PR"));
-    {
-      const text = docVal("input-pr");
-      const block = document.createElement("div");
-      block.style.whiteSpace = "pre-wrap";
-      block.style.wordWrap = "break-word";
-      block.textContent = text;
-      if (isOverflowAfterAppend(currentPage, block)) {
-        currentPage = createNewPage();
-        currentPage.appendChild(makeSectionTitle("自己PR"));
-      }
-      currentPage.appendChild(block);
-    }
-  }
-
-  /***************************************************
-   * (I) タイトルブロック
-   ***************************************************/
-  function makeTitleBlock() {
-    const nameVal = esc(docVal("input-name"));
-    const telVal  = esc(docVal("input-tel"));
-    const mailVal = esc(docVal("input-mail"));
-    const dateStr = window.currentDateString || "";
-
-    const container = document.createElement("div");
-    const titleEl = document.createElement("div");
-    titleEl.classList.add("preview-title");
-    titleEl.textContent = "職務経歴書";
-    container.appendChild(titleEl);
-
-    const infoEl = document.createElement("div");
-    infoEl.classList.add("top-right");
-    infoEl.innerHTML = `
-      <div>作成日: ${dateStr}</div>
-      <div>名前: ${nameVal}</div>
-      <div>Tel: ${telVal}</div>
-      <div>Mail: ${mailVal}</div>
-    `;
-    container.appendChild(infoEl);
-
-    return container;
-  }
-
-  function makeSectionTitle(txt) {
-    const d = document.createElement("div");
-    d.className = "preview-section-title";
-    d.textContent = txt;
-    return d;
-  }
-
-  /***************************************************
-   * (J) 職歴ブロック
-   ***************************************************/
-  function makeCareerBlock(i) {
-    const period     = docVal(`career${i}-period`);
-    const company    = docVal(`career${i}-company`);
-    const employment = docVal(`career${i}-employment`);
-    const position   = docVal(`career${i}-position`);
-    const business   = docVal(`career${i}-business`);
-    const duty       = docVal(`career${i}-duty`);
-    const achievement = docVal(`career${i}-achievement`);
-    const empcount   = docVal(`career${i}-empcount`);
-    const capital    = docVal(`career${i}-capital`);
-    const market     = docVal(`career${i}-market`);
-
-    const wrapper = document.createElement("div");
-    wrapper.style.marginBottom = "16px";
-
-    // 会社情報
-    const infoDiv = document.createElement("div");
-    infoDiv.style.marginBottom = "0px";
-    infoDiv.innerHTML = `
-      会社名： ${esc(company)}<br>
-      事業内容： ${esc(business)}<br>
-      資本金： ${esc(capital)}　従業員数： ${esc(empcount)}　株式市場： ${esc(market)}
-    `;
-    wrapper.appendChild(infoDiv);
-
-    // 期間／業務内容テーブル
-    const table = document.createElement("table");
-    table.classList.add("career-format-table");
-    table.innerHTML = `
-      <thead>
-        <tr>
-          <th style="width:25%">期間</th>
-          <th style="width:75%">業務内容</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>
-            ${esc(period)}
-          </td>
-          <td>
-            雇用形態： ${esc(employment)}<br>
-            役職： ${esc(position)}<br>
-            実績： ${esc(achievement)}<br>
-            業務内容： ${esc(duty)}
-          </td>
-        </tr>
-      </tbody>
-    `;
-    wrapper.appendChild(table);
-
-    return wrapper;
-  }
-
-  /***************************************************
-   * (K) 免許・資格テーブル
-   ***************************************************/
-  function makeLicenseTable(i) {
-    const y  = docVal(`license${i}-year`);
-    const mo = docVal(`license${i}-month`);
-    const nm = docVal(`license${i}-name`);
-    const table = document.createElement("table");
-    table.innerHTML = `
-      <tr>
-        <th>年</th>
-        <td style="width:25mm;">${esc(y)}</td>
-        <th>月</th>
-        <td style="width:25mm;">${esc(mo)}</td>
-        <th colspan="2" style="text-align:center;">免許・資格名</th>
-        <td colspan="3" style="height:auto;">${esc(nm)}</td>
-      </tr>
-    `;
-    return table;
-  }
-
-  /***************************************************
-   * (L) 語学テーブル
-   ***************************************************/
-  function makeLangTable(i) {
-    const l  = docVal(`lang${i}-lang`);
-    const lv = docVal(`lang${i}-level`);
-    const table = document.createElement("table");
-    table.innerHTML = `
-      <tr>
-        <th>語学</th>
-        <td>${esc(l)}</td>
-        <th>レベル</th>
-        <td>${esc(lv)}</td>
-      </tr>
-    `;
-    return table;
-  }
-
-  /***************************************************
-   * (M) 補助関数
-   ***************************************************/
-  function docVal(id) {
-    const el = document.getElementById(id);
-    return el ? el.value : "";
-  }
-  function esc(str) {
-    return (str || "").replace(/[&<>"']/g, (s) =>
-      ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;",
-      }[s])
-    );
-  }
-  function isOverflowAfterAppend(pageElem, blockElem) {
-    pageElem.appendChild(blockElem);
-    const isOverflow = pageElem.scrollHeight > pageElem.clientHeight;
-    pageElem.removeChild(blockElem);
-    return isOverflow;
-  }
-
-  /***************************************************
-   * (N) PDFダウンロード処理
-   ***************************************************/
-  async function handleDownloadPDF() {
-    console.log("[DEBUG] handleDownloadPDF: start...");
-
-    // ▼ ここで送信するデータは、GAS 側 doPost(e) が期待しているキーに合わせる
-    const sendData = {
-      createdDate: window.currentDateString || "",
-      name: docVal("input-name"),
-      tel: docVal("input-tel"),
-      mail: docVal("input-mail")
-    };
-
-    try {
-      const response = await fetch(scriptURL, {
-        method: 'POST',
-        mode: 'no-cors', // レスポンスを受け取らずCORSエラーを回避
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(sendData)   // ← 修正: ここを sendData に変更
-      });
-      const resultText = await response.text();
-      console.log("スプレッドシート送信結果:", resultText);
-    } catch (e) {
-      console.error("[DEBUG] 送信エラー:", e);
-    }
-
-    // html2canvas + jsPDF でPDF生成
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('portrait', 'pt', 'a4'); 
-    const pages = document.querySelectorAll('.resume-page');
-
-    for(let i=0; i<pages.length; i++){
-      if(i>0) pdf.addPage();
-      const canvas = await html2canvas(pages[i], { scale: 2 });
-      const imgData = canvas.toDataURL('image/jpeg', 1.0);
-
-      const pdfWidth  = pdf.internal.pageSize.getWidth();  
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidthPx  = canvas.width;
-      const imgHeightPx = canvas.height;
-      const scale = pdfWidth / imgWidthPx;
-      const imgHeightInPdf = imgHeightPx * scale;
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeightInPdf);
-    }
-    pdf.save("職務経歴書.pdf");
-    alert("PDFダウンロードが開始されました！（GAS の応答がCORS非対応の場合はブラウザエラーの可能性あり）");
-    console.log("[DEBUG] PDF download complete.");
-  }
   </script>
 </body>
 </html>

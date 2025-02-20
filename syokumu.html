@@ -419,6 +419,16 @@
       font-weight: bold;
       margin-right: 8px;
     }
+
+    /* 追加: 利用規約の囲み枠 */
+    .terms-box {
+      border: 1px solid #000;
+      border-radius: 6px;
+      background: #fff;
+      padding: 10px;
+      margin-top: 16px;
+      margin-bottom: 16px;
+    }
   </style>
 
   <!-- ◆ html2canvas と jsPDF をCDNから読み込み（外部ライブラリ） -->
@@ -578,6 +588,28 @@
       <div class="section-title">自己PR</div>
       <textarea class="simple-textarea" id="input-pr"></textarea>
 
+      <!-- ▼ ここから利用規約を追加 ▼ -->
+      <div class="section-title">利用規約</div>
+      <div class="terms-box">
+        <p><strong>第1条【定義】</strong></p>
+        <ol style="margin-left:1em;">
+          <li>本規約：ストア利用規約</li>
+          <li>当方：本サービスを利用して開設したオンラインストア運営者</li>
+          <li>本サービス：当方がインターネットを通じて提供する通信販売サービス</li>
+          <li>利用者：本サービスの内容を全て理解・承諾した上で当方のサービスを利用する者</li>
+          <li>…（以下、利用規約本文を必要に応じて追加してください）</li>
+        </ol>
+        <!-- 必要に応じて利用規約のテキストを追記 -->
+      </div>
+
+      <!-- 同意チェックボックス -->
+      <div style="margin:10px 0;">
+        <input type="checkbox" id="agree-terms">
+        <label for="agree-terms" style="font-weight: bold;">同意する</label>
+      </div>
+      <!-- ▲ 利用規約ここまで ▲ -->
+
+
       <!-- PDFダウンロードボタンを中央寄せ -->
       <div style="text-align: center; margin-top: 24px;">
         <!-- IDを download-pdf にし、JSと対応させる -->
@@ -633,10 +665,19 @@
       setupBindings();
       updatePreviewPages();
 
-      // PDFダウンロード
+      // PDFダウンロードボタン
       const pdfBtn = document.getElementById("download-pdf");
-      if (pdfBtn) {
-        pdfBtn.addEventListener('click', handleDownloadPDF);
+      const agreeCheckbox = document.getElementById("agree-terms");
+      if (pdfBtn && agreeCheckbox) {
+        pdfBtn.addEventListener('click', async (e) => {
+          // チェックボックスがOFFの場合は警告して処理中断
+          if (!agreeCheckbox.checked) {
+            alert("利用規約に同意する必要があります。");
+            return;
+          }
+          // 同意済みの場合のみPDF生成
+          await handleDownloadPDF();
+        });
       }
 
       // ファイルアップロード
@@ -940,7 +981,7 @@
           let newId = elem.id.replace('lang1-', `lang${langCount}-`);
           elem.id = newId;
           elem.value = "";
-          elem.addEventListener('input', updatePreviewPages);
+          elem.addEventListener("input", updatePreviewPages);
         });
         let wrapper = document.createElement('div');
         wrapper.className = 'sub-section';

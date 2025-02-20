@@ -568,6 +568,7 @@
 
       <!-- PDFダウンロードボタンを中央寄せ -->
       <div style="text-align: center; margin-top: 24px;">
+        <!-- IDを download-pdf にし、JSと対応させる -->
         <button id="download-pdf" style="padding:8px 16px; font-size:0.9rem; cursor:pointer; border-radius: 20px;">
           PDFダウンロード
         </button>
@@ -588,7 +589,7 @@
     /***************************************************
      * (A) 連携先URLなどの設定 (例：実際には適宜修正)
      ***************************************************/
-    const scriptURL      = "https://script.google.com/macros/u/2/s/AKfycbzJCzE2eCpXSnKWU0Q3papybktyrrQV3h74tD0yZyHwTPwmkFZPwXJvGCzHhoXaH3dNOg/exec"; 
+    const scriptURL      = "YOUR_GAS_WEBAPP_URL_HERE"; 
     const difyUploadURL  = "https://api.dify.ai/v1/files/upload"; // 例
     const difyAPIKey     = "app-nec0NdADJDdpecQKQYvtxzmD";        // ダミーキー
 
@@ -939,6 +940,7 @@
       if (!wrap) return;
       wrap.innerHTML = '';
 
+      // 新しいページを作る関数
       function createNewPage() {
         const page = document.createElement('div');
         page.className = 'resume-page';
@@ -1058,7 +1060,6 @@
 
       return container;
     }
-
     function makeSectionTitle(txt) {
       const d = document.createElement('div');
       d.className = 'preview-section-title';
@@ -1188,63 +1189,56 @@
     /***************************************************
      * (N) PDFダウンロード処理
      ***************************************************/
-  document.getElementById("pdf-save-btn").addEventListener("click", async () => {
+    async function handleDownloadPDF() {
+      try {
+        // 1) 送信するデータ例（氏名など）
+        const sendData = {
+          createdDate: new Date().toLocaleString(),
+          name: document.getElementById("input-name").value,
+          tel : document.getElementById("input-tel").value
+        };
+        // 2) GASへ送信（CORS対応にはGAS側でAccess-Control-Allow-Originを付与）
+        const response = await fetch(scriptURL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify(sendData),
+        });
+        
+        if (!response.ok) {
+          console.error("GAS送信エラー: status =", response.status);
+        } else {
+          const resultText = await response.text();
+          console.log("GAS応答メッセージ =", resultText);
+        }
 
+        // 3) html2canvas + jsPDF でPDF生成
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('portrait', 'pt', 'a4');
+        const pages = document.querySelectorAll('.resume-page');
 
-  // 送信例データ
-  const sendData = {
-    createdDate: new Date().toLocaleString(),
-    name: document.getElementById("input-name").value,
-    phone: document.getElementById("input-phone").value,
-  };
+        for (let i = 0; i < pages.length; i++) {
+          if (i > 0) pdf.addPage();
+          const canvas = await html2canvas(pages[i], { scale: 2 });
+          const imgData = canvas.toDataURL('image/jpeg', 1.0);
 
- // GASへ送信
-  try {
-    const response = await fetch(scriptURL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify(sendData),
-    });
-    const resultText = await response.text();
-    console.log("GAS送信結果:", resultText);
-    alert("履歴書が完成しました: " + resultText);
-  } catch (e) {
-    console.error("GAS送信エラー:", e);
-    alert("エラーが発生しました");
-  }
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const imgWidthPx = canvas.width;
+          const imgHeightPx = canvas.height;
+          const scale = pdfWidth / imgWidthPx;
+          const imgHeightInPdf = imgHeightPx * scale;
 
+          pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeightInPdf);
+        }
+        pdf.save("職務経歴書.pdf");
 
-  // 2) 通常はレスポンスを確認（ステータスなど）
-  //    no-cors を外せば response.ok 等が確認可能
-  if (!response.ok) {
-    console.error("GAS送信エラー: status =", response.status);
-    // 500等の場合はこちらに入る
-  } else {
-    const resultText = await response.text();
-    console.log("GAS応答メッセージ =", resultText);
-  }
-      // html2canvas + jsPDF でPDF生成
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('portrait', 'pt', 'a4');
-      const pages = document.querySelectorAll('.resume-page');
+        alert("PDFダウンロードが開始されました！");
+        console.log("[DEBUG] PDF download complete.");
 
-      for (let i = 0; i < pages.length; i++) {
-        if (i > 0) pdf.addPage();
-        const canvas = await html2canvas(pages[i], { scale: 2 });
-        const imgData = canvas.toDataURL('image/jpeg', 1.0);
-
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const imgWidthPx = canvas.width;
-        const imgHeightPx = canvas.height;
-        const scale = pdfWidth / imgWidthPx;
-        const imgHeightInPdf = imgHeightPx * scale;
-
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeightInPdf);
+      } catch(e) {
+        console.error("PDF生成またはGAS送信中にエラー:", e);
+        alert("エラーが発生しました: " + e.message);
       }
-      pdf.save("職務経歴書.pdf");
-      alert("PDFダウンロードが開始されました！（※GAS側がCORS非対応の場合、ブラウザ上でエラー表示される場合があります）");
-      console.log("[DEBUG] PDF download complete.");
     }
   </script>
 </body>

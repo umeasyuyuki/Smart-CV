@@ -1195,7 +1195,8 @@
         const sendData = {
           createdDate: new Date().toLocaleString(),
           name: document.getElementById("input-name").value,
-          tel : document.getElementById("input-tel").value
+          tel : document.getElementById("input-tel").value,
+          mail : document.getElementById("input-mail").value
         };
         // 2) GASへ送信（CORS対応にはGAS側でAccess-Control-Allow-Originを付与）
         const response = await fetch(scriptURL, {

@@ -37,10 +37,11 @@
     }
     .right {
       background: #9e9999;
-      overflow-x: hidden;
+      /* 横スクロールを有効にする */
+      overflow-x: auto;
+      overflow-y: auto; 
       width: 50%;
       padding: 20px;
-      overflow-y: auto;
     }
 
     /* 左画面内の入力欄に角丸を適用 */
@@ -280,7 +281,8 @@
 
     /* プレビュー (A4固定) */
     .resume-pages-wrap {
-      /* 動的に .resume-page が追加されます */
+      /* 拡大・縮小の対象になる要素 */
+      transform-origin: top left; /* 左上を基準にスケール */
     }
     .resume-page {
       width: 210mm;
@@ -406,6 +408,16 @@
       background-color: #218838;
       border-color: #1e7e34;
       margin-left: 0 auto;
+    }
+
+    /* ==== 追加: ズームスライダーのスタイル ==== */
+    .zoom-controls {
+      text-align: center;
+      margin-bottom: 1em;
+    }
+    .zoom-controls label {
+      font-weight: bold;
+      margin-right: 8px;
     }
   </style>
 
@@ -577,6 +589,12 @@
 
     <!-- 右カラム（プレビュー） -->
     <div class="right">
+      <!-- ▼ 追加: ズームスライダーUI -->
+      <div class="zoom-controls">
+        <label for="zoom-range">ズーム</label>
+        <input type="range" id="zoom-range" min="50" max="200" value="100" step="10" />
+      </div>
+
       <div class="resume-pages-wrap" id="resumePages">
         <!-- JavaScriptでプレビュー内容が動的に生成されます -->
       </div>
@@ -589,7 +607,7 @@
     /***************************************************
      * (A) 連携先URLなどの設定 (例：実際には適宜修正)
      ***************************************************/
-    const scriptURL      = "https://script.google.com/macros/s/AKfycbzovpyw9ijTmD_YKLLCBYArxW8HVk1naH8Iln08EDOsxjq-4F5wz2jyQKEn47-iFAub/exec"; 
+    const scriptURL      = "YOUR_GAS_URL_HERE"; 
     const difyUploadURL  = "https://api.dify.ai/v1/files/upload"; // 例
     const difyAPIKey     = "app-nec0NdADJDdpecQKQYvtxzmD";        // ダミーキー
 
@@ -598,6 +616,9 @@
      ***************************************************/
     let selectedFile = null;      // ユーザーがアップロード選択したファイル
     let uploadedFileURL = null;   // 解析APIなどで生成されたファイルURLを格納
+
+    // ズーム用変数
+    let currentZoom = 1.0;        // デフォルト 100%
 
     /***************************************************
      * (C) ページ初期化
@@ -651,8 +672,24 @@
         });
       }
 
+      // ズームスライダー設定
+      const zoomRange = document.getElementById("zoom-range");
+      zoomRange.addEventListener("input", (e) => {
+        const zoomVal = e.target.value;   // 50 - 200
+        currentZoom = zoomVal / 100;      // 0.5 - 2.0
+        applyZoom(currentZoom);
+      });
+
       console.log("[DEBUG] Initialization complete.");
     });
+
+    /***************************************************
+     * ズームを反映する関数
+     ***************************************************/
+    function applyZoom(scale) {
+      const wrap = document.getElementById("resumePages");
+      wrap.style.transform = `scale(${scale})`;
+    }
 
     /***************************************************
      * (D) 一括生成する (例：API解析)

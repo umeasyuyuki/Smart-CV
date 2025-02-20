@@ -1188,24 +1188,32 @@
     /***************************************************
      * (N) PDFダウンロード処理
      ***************************************************/
-    async function handleDownloadPDF() {
-  // 送信するデータをJSでJSON化
+  document.getElementById("pdf-save-btn").addEventListener("click", async () => {
+  // ページ分割確定
+  splitPagesIfOverflow();
+
+  // 送信例データ
   const sendData = {
-    createdDate: window.currentDateString || "",
-    name : document.getElementById("input-name")?.value || "",
-    tel  : document.getElementById("input-tel")?.value  || "",
-    mail : document.getElementById("input-mail")?.value || ""
+    createdDate: new Date().toLocaleString(),
+    name: document.getElementById("input-name").value,
+    phone: document.getElementById("input-phone").value,
   };
 
-  // 1) GAS へPOST
-  //    Content-Type: text/plain で JSON.stringify(sendData) を送る
-  const response = await fetch(scriptURL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'text/plain' // GAS側の doPost で text/plain を想定
-    },
-    body: JSON.stringify(sendData) // JSON文字列にして送信
-  });
+ // GASへ送信
+  try {
+    const response = await fetch(scriptURL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(sendData),
+    });
+    const resultText = await response.text();
+    console.log("GAS送信結果:", resultText);
+    alert("履歴書が完成しました: " + resultText);
+  } catch (e) {
+    console.error("GAS送信エラー:", e);
+    alert("エラーが発生しました");
+  }
+
 
   // 2) 通常はレスポンスを確認（ステータスなど）
   //    no-cors を外せば response.ok 等が確認可能

@@ -589,9 +589,17 @@
     /***************************************************
      * (A) 連携先URLなどの設定
      ***************************************************/
+    // ▼ 既存：スプレッドシート更新用のGAS
+    const scriptURL     = "https://script.google.com/macros/s/AKfycbzovpyw9ijTmD_YKLLCBYArxW8HVk1naH8Iln08EDOsxjq-4F5wz2jyQKEn47-iFAub/exec";
+
+    // ▼ 既存のDify直呼び用（削らずに残す）
     const difyUploadURL = "https://api.dify.ai/v1";
     const difyAPIKey    = "app-nec0NdADJDdpecQKQYvtxzmD";
-    const scriptURL     = "https://script.google.com/macros/s/AKfycbzovpyw9ijTmD_YKLLCBYArxW8HVk1naH8Iln08EDOsxjq-4F5wz2jyQKEn47-iFAub/exec";
+
+    // ▼ 追加：Difyを呼び出す別のGAS
+    //    (デプロイして得られるWebアプリURLを指定してください)
+    const difyGasURL    = "https://script.google.com/macros/s/AKfycbywNHTcJy5AqH0nnE5T9QuNgtwHGzsfbt6pB_etEh_JdV2BVtG8Asmhwhe9ulEmukkm/exec";
+
 
     /***************************************************
      * (B) グローバル変数
@@ -619,7 +627,7 @@
       setupBindings();
       updatePreviewPages();
 
-      // ファイル選択
+      // ========== ファイル選択 ==========
       const fileInput = document.getElementById("resume-file");
       if (fileInput) {
         fileInput.addEventListener("change", async (e) => {
@@ -627,24 +635,24 @@
             selectedFile = e.target.files[0];
             alert("ファイルが選択されました: " + selectedFile.name);
 
-            // Difyにファイル送信
+            // ▼【変更】直接Difyへ送るのではなく、difyGasURLへ送信
             try {
               const formData = new FormData();
               formData.append("file", selectedFile);
 
-              const response = await fetch(difyUploadURL, {
+              // Dify用の別GASに送る
+              const response = await fetch(difyGasURL, {
                 method: "POST",
-                headers: { "x-api-key": difyAPIKey },
                 body: formData
               });
               if (!response.ok) {
                 const errText = await response.text();
-                throw new Error("Difyアップロード失敗: " + errText);
+                throw new Error("Dify用GASに送信失敗: " + errText);
               }
               const result = await response.json();
-              console.log("[DEBUG] Dify結果 = ", result);
+              console.log("[DEBUG] difyGasURLからの結果 =", result);
 
-              // Difyの出力が { "text": "...全文..." } であると仮定
+              // 仮に result.text に解析結果全文が入っているとしてパース
               if (result.text) {
                 const parsed = parseDifyText(result.text);
                 fillForm(parsed);
@@ -652,7 +660,7 @@
 
               alert("Dify解析結果をフォームに反映しました。");
               updatePreviewPages();
-            } catch(err) {
+            } catch (err) {
               console.error(err);
               alert("解析エラー: " + err.message);
             }
@@ -660,7 +668,7 @@
         });
       }
 
-      // 一括生成
+      // ========== 一括生成 ==========
       const bulkBtn = document.getElementById("bulk-generate-btn");
       if (bulkBtn) {
         bulkBtn.addEventListener("click", async () => {
@@ -668,20 +676,19 @@
             alert("先にファイルを選択してください。");
             return;
           }
-          // ここで同様の処理
           try {
+            // ▼【変更】同様に、difyGasURLへ送る
             const formData = new FormData();
             formData.append("file", selectedFile);
-            const response = await fetch(difyUploadURL, {
+            const response = await fetch(difyGasURL, {
               method: "POST",
-              headers: { "x-api-key": difyAPIKey },
               body: formData
             });
             if (!response.ok) {
-              throw new Error("Difyアップロード失敗: " + (await response.text()));
+              throw new Error("Dify用GASへの送信失敗: " + (await response.text()));
             }
             const result = await response.json();
-            console.log("[DEBUG] 一括生成-Dify結果 = ", result);
+            console.log("[DEBUG] 一括生成 - difyGasURLからの結果 =", result);
 
             if (result.text) {
               const parsed = parseDifyText(result.text);
@@ -696,7 +703,7 @@
         });
       }
 
-      // ズームボタン
+      // ========== ズームボタン ==========
       const zoomOutBtn = document.getElementById("zoom-out");
       const zoomInBtn  = document.getElementById("zoom-in");
       if (zoomOutBtn && zoomInBtn) {
@@ -714,7 +721,8 @@
         });
       }
 
-      // PDFダウンロード
+      // ========== PDFダウンロード ==========
+      //       ここでは既存の "scriptURL" にスプレッドシート用データを送信
       const pdfBtn = document.getElementById("download-pdf");
       const agreeCheckbox = document.getElementById("agree-terms");
       if (pdfBtn && agreeCheckbox) {
@@ -768,7 +776,7 @@
       const mailMatch = text.match(/【メール】:\s*(.+)/);
       if (mailMatch) data.mail = mailMatch[1].trim();
 
-      // 職務要約 "**職務要約**" から次の "**" まで
+      // 職務要約
       const summaryMatch = text.match(/\*\*職務要約\*\*([\s\S]*?)(?=\*\*|$)/);
       if (summaryMatch) {
         data.summary = summaryMatch[1].trim().replace(/^(\r?\n)+/, "");
@@ -783,7 +791,6 @@
       // 自己PR
       const prMatch = text.match(/\*\*自己PR\*\*([\s\S]*?$)/);
       if (prMatch) {
-        // 中で【自己PR】: があるかチェック
         const lines = prMatch[1].split('\n').map(s => s.trim());
         let prText = "";
         lines.forEach(line => {
@@ -792,26 +799,19 @@
             prText = pm[1].trim();
           }
         });
-        // もし【自己PR】: という行がない場合は、そのまま使う
         if (!prText) prText = prMatch[1].trim();
         data.pr = prText;
       }
 
-      // 職務経歴 "**職務経歴**" ～ 次の "**"
-      // 例えば "【会社名】: 〇〇\n" で区切り
+      // 職務経歴
       const careersSection = text.match(/\*\*職務経歴\*\*([\s\S]*?)(?=\n\*\*|$)/);
       if (careersSection) {
         const cSec = careersSection[1].trim();
-        // "【会社名】:" でスプリット
         let parts = cSec.split(/【会社名】:/);
-        // 最初は空要素の可能性がある
-        parts.shift(); // 先頭は捨てる
-
+        parts.shift();
         parts.forEach(cp => {
-          // cp は "ヤマト運輸流山ベース\n　【期間】: 20xx\n　【雇用形態】: ..." のような内容
           const lines = cp.split('\n').map(s => s.trim());
-          const company = lines[0] || ""; // 1行目が会社名
-
+          const company = lines[0] || "";
           let period = "";
           let employment = "";
           let position = "";
@@ -820,34 +820,25 @@
           let empcount = "";
           let capital  = "";
           let market   = "";
-          let duty     = ""; // "【業務内容】:"があれば取りたいが、元の出力例には無いかも
+          let duty     = "";
 
           lines.forEach(line => {
             const pm = line.match(/【期間】:\s*(.*)/);
             if (pm) period = pm[1].trim();
-
             const em = line.match(/【雇用形態】:\s*(.*)/);
             if (em) employment = em[1].trim();
-
             const posm = line.match(/【役職】:\s*(.*)/);
             if (posm) position = posm[1].trim();
-
             const bm = line.match(/【事業内容】:\s*(.*)/);
             if (bm) business = bm[1].trim();
-
             const am = line.match(/【実績】:\s*(.*)/);
             if (am) achievement = am[1].trim();
-
             const ec = line.match(/【従業員数】:\s*(.*)/);
             if (ec) empcount = ec[1].trim();
-
             const cm = line.match(/【資本金】:\s*(.*)/);
             if (cm) capital = cm[1].trim();
-
             const mm = line.match(/【株式会社】:\s*(.*)/);
             if (mm) market = mm[1].trim();
-
-            // もし"【業務内容】:"があるなら取りたい
             const dm = line.match(/【業務内容】:\s*(.*)/);
             if (dm) duty = dm[1].trim();
           });
@@ -867,14 +858,12 @@
         });
       }
 
-      // 免許・資格 "**免許・資格**"
-      // "【取得年】: 2020\n【取得月】：1\n【免許・資格名】: ～"
+      // 免許・資格
       const licenseSection = text.match(/\*\*免許・資格\*\*([\s\S]*?)(?=\n\*\*|$)/);
       if (licenseSection) {
         const block = licenseSection[1].trim();
         let parts = block.split(/【取得年】:/);
-        parts.shift(); // 先頭は空になるかもしれない
-
+        parts.shift();
         parts.forEach(lp => {
           const lines = lp.split('\n').map(s => s.trim());
           let year  = lines[0] || "";
@@ -883,19 +872,14 @@
           lines.forEach(line => {
             const mo = line.match(/【取得月】：\s*(.*)/);
             if (mo) month = mo[1].trim();
-
             const nm = line.match(/【免許・資格名】:\s*(.*)/);
             if (nm) name = nm[1].trim();
           });
-          data.licenses.push({
-            year: year,
-            month: month,
-            name: name
-          });
+          data.licenses.push({ year, month, name });
         });
       }
 
-      // 語学 "**語学**"
+      // 語学
       const langSection = text.match(/\*\*語学\*\*([\s\S]*?)(?=\n\*\*|$)/);
       if (langSection) {
         const lines = langSection[1].split('\n').map(s => s.trim());
@@ -907,10 +891,7 @@
           const lv = line.match(/【語学レベル】:\s*(.*)/);
           if (lv) levelVal = lv[1].trim();
         });
-        data.languages.push({
-          lang: langVal,
-          level: levelVal
-        });
+        data.languages.push({ lang: langVal, level: levelVal });
       }
 
       console.log("[DEBUG] parseDifyText =>", data);
@@ -1478,7 +1459,7 @@
      ***************************************************/
     async function handleDownloadPDF() {
       try {
-        // 例：GASに送信する
+        // ▼ 既存コード：スプレッドシート用GASに送信
         const sendData = {
           createdDate: new Date().toLocaleString(),
           name: document.getElementById("input-name").value,

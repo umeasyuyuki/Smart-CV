@@ -5,10 +5,35 @@ const scriptURL =
   "https://script.google.com/macros/s/AKfycbyYmqbjwwkZlxWNfFVZi8ORT0mHw0sh9VlpYBcVsYz_UZSB63OM6LOya0UAZgZgCyhGpw/exec";
 
 /************************************************************
- * 2) 履歴書HTMLテンプレート
+ * 2) 履歴書HTMLテンプレート（文字列として書く）
  ************************************************************/
-// 学歴・職歴12行、免許・資格6行をあらかじめテーブルに用意
-const resumeTemplate = 
+function generateResumeTemplate() {
+  // 学歴・職歴テーブル 12行ぶんを文字列として組み立て
+  let eduRowsHTML = "";
+  for (let i = 1; i <= 12; i++) {
+    eduRowsHTML += `
+      <tr id="edu-row-${i}" class="education-value">
+        <td class="education-year-value" id="edu-preview-year-${i}"></td>
+        <td class="education-container-month-value" id="edu-preview-month-${i}"></td>
+        <td class="education-history-value" id="edu-preview-work-${i}"></td>
+      </tr>
+    `;
+  }
+
+  // 免許・資格テーブル 6行ぶんを文字列として組み立て
+  let skillRowsHTML = "";
+  for (let i = 1; i <= 6; i++) {
+    skillRowsHTML += `
+      <tr id="skill-row-${i}" class="skill-value">
+        <td class="skill-year-value" id="skill-preview-year-${i}"></td>
+        <td class="skill-container-month-value" id="skill-preview-month-${i}"></td>
+        <td class="skill-history-value" id="skill-preview-history-${i}"></td>
+      </tr>
+    `;
+  }
+
+  // テンプレート全体をバッククォートで囲み、上記テーブル行を埋め込む
+  return `
   <div class="resume-preview">
     <div class="resume-content" id="resume-content-whole">
       <div style="display: flex; justify-content: space-between; margin-bottom: 5mm;">
@@ -119,17 +144,7 @@ const resumeTemplate =
             <th class="education-container-month">月</th>
             <th class="education-history">学歴・職歴</th>
           </tr>
-          <!-- 12行 -->
-          ${[...Array(12)].map((_, i) => {
-            const row = i + 1;
-            return 
-              <tr id="edu-row-${row}" class="education-value">
-                <td class="education-year-value" id="edu-preview-year-${row}"></td>
-                <td class="education-container-month-value" id="edu-preview-month-${row}"></td>
-                <td class="education-history-value" id="edu-preview-work-${row}"></td>
-              </tr>
-            ;
-          }).join("")}
+          ${eduRowsHTML}
         </table>
       </div>
 
@@ -141,17 +156,7 @@ const resumeTemplate =
             <th class="skill-container-month">月</th>
             <th class="skill-history">免許・資格</th>
           </tr>
-          <!-- 6行 -->
-          ${[...Array(6)].map((_, i) => {
-            const row = i + 1;
-            return 
-              <tr id="skill-row-${row}" class="skill-value">
-                <td class="skill-year-value" id="skill-preview-year-${row}"></td>
-                <td class="skill-container-month-value" id="skill-preview-month-${row}"></td>
-                <td class="skill-history-value" id="skill-preview-history-${row}"></td>
-              </tr>
-            ;
-          }).join("")}
+          ${skillRowsHTML}
         </table>
       </div>
 
@@ -201,22 +206,25 @@ const resumeTemplate =
 
     </div>
   </div>
-;
+  `;
+}
 
-
+/************************************************************
+ * 3) ページDOMを追加して表示
+ ************************************************************/
 // コンテナ
 const pagesContainer = document.getElementById("resume-pages");
 
-/************************************************************
- * 3) 1ページ目を自動生成
- ************************************************************/
+/** 1ページ目を自動生成 */
 function createNewPageDOM() {
   const pageEl = document.createElement("div");
   pageEl.classList.add("resume-page");
-  pageEl.innerHTML = resumeTemplate;
+  pageEl.innerHTML = generateResumeTemplate(); // 修正：文字列としてHTMLを流し込む
   pagesContainer.appendChild(pageEl);
   return pageEl;
 }
+
+// 最初の1ページ作成
 let currentPage = createNewPageDOM();
 
 /************************************************************
@@ -228,8 +236,12 @@ function setTodayDate() {
   const m = now.getMonth() + 1;
   const d = now.getDate();
   const reiwa = y - 2018; // 2019年=令和元年
+  
+  // テンプレートリテラルで文字列を作成
+  const todayStr = `令和 ${reiwa} 年 ${m} 月 ${d} 日現在`;
+  
   const todayDateEl = document.getElementById("preview-today-date");
-  todayDateEl.textContent = 令和 ${reiwa} 年 ${m} 月 ${d} 日現在;
+  todayDateEl.textContent = todayStr;
 }
 setTodayDate();
 
@@ -287,6 +299,7 @@ function syncBirth() {
 
 // 年齢
 bindTextSync("#age", "#preview-age");
+
 // 性別
 bindTextSync("#gender", "#preview-gender");
 
@@ -357,9 +370,9 @@ const defEduWork = eduContainer.querySelector(".edu-work");
 
 // 行同期用関数
 function syncEduRow(leftYearEl, leftMonthEl, leftWorkEl, rowIndex) {
-  const previewYear = document.getElementById(edu-preview-year-${rowIndex});
-  const previewMonth = document.getElementById(edu-preview-month-${rowIndex});
-  const previewWork = document.getElementById(edu-preview-work-${rowIndex});
+  const previewYear = document.getElementById(`edu-preview-year-${rowIndex}`);
+  const previewMonth = document.getElementById(`edu-preview-month-${rowIndex}`);
+  const previewWork = document.getElementById(`edu-preview-work-${rowIndex}`);
 
   function doSync() {
     previewYear.textContent = leftYearEl.value;
@@ -375,7 +388,7 @@ function syncEduRow(leftYearEl, leftMonthEl, leftWorkEl, rowIndex) {
 }
 syncEduRow(defEduYear, defEduMonth, defEduWork, 1);
 
-// 年月選択肢
+// 年月選択肢を設定する関数
 function populateYearMonth(selectYear, selectMonth) {
   for (let y = 1900; y <= yearNow; y++) {
     const opt = document.createElement("option");
@@ -392,6 +405,7 @@ function populateYearMonth(selectYear, selectMonth) {
 }
 populateYearMonth(defEduYear, defEduMonth);
 
+// 「＋ 追加する」ボタン
 document.getElementById("add-education-row").addEventListener("click", () => {
   if (currentEduRows >= maxEduRows) {
     alert("学歴・職歴は最大12行までです。");
@@ -400,16 +414,16 @@ document.getElementById("add-education-row").addEventListener("click", () => {
   currentEduRows++;
   const rowIndex = currentEduRows;
 
-  // 左側に新しい行DOM
+  // 左側フォームに新しい行DOM
   const row = document.createElement("div");
   row.className = "row-container";
-  row.innerHTML = 
+  row.innerHTML = `
     <div class="form-inline">
       <select class="edu-year"><option value="">--</option></select>
       <select class="edu-month"><option value="">--</option></select>
       <input type="text" class="edu-work" placeholder="" />
     </div>
-  ;
+  `;
   eduContainer.appendChild(row);
 
   // populate
@@ -422,15 +436,16 @@ document.getElementById("add-education-row").addEventListener("click", () => {
   syncEduRow(newYear, newMonth, newWork, rowIndex);
 });
 
+// 「－ 削除」ボタン
 document.getElementById("remove-education-last").addEventListener("click", () => {
   if (currentEduRows > 1) {
     const rows = eduContainer.querySelectorAll(".row-container");
     eduContainer.removeChild(rows[rows.length - 1]);
 
-    // 右側の該当行を空に
-    document.getElementById(edu-preview-year-${currentEduRows}).textContent = "";
-    document.getElementById(edu-preview-month-${currentEduRows}).textContent = "";
-    document.getElementById(edu-preview-work-${currentEduRows}).textContent = "";
+    // 右側プレビューの該当行を空に
+    document.getElementById(`edu-preview-year-${currentEduRows}`).textContent = "";
+    document.getElementById(`edu-preview-month-${currentEduRows}`).textContent = "";
+    document.getElementById(`edu-preview-work-${currentEduRows}`).textContent = "";
 
     currentEduRows--;
     splitPagesIfOverflow();
@@ -450,9 +465,9 @@ const defLicenseMonth = skillContainer.querySelector(".license-month");
 const defSkillHistory = skillContainer.querySelector(".skill-history");
 
 function syncSkillRow(yearEl, monthEl, histEl, rowIndex) {
-  const previewYear = document.getElementById(skill-preview-year-${rowIndex});
-  const previewMonth = document.getElementById(skill-preview-month-${rowIndex});
-  const previewHistory = document.getElementById(skill-preview-history-${rowIndex});
+  const previewYear = document.getElementById(`skill-preview-year-${rowIndex}`);
+  const previewMonth = document.getElementById(`skill-preview-month-${rowIndex}`);
+  const previewHistory = document.getElementById(`skill-preview-history-${rowIndex}`);
 
   function doSync() {
     previewYear.textContent = yearEl.value;
@@ -484,6 +499,7 @@ function populateYearMonthSkill(selectYear, selectMonth) {
 }
 populateYearMonthSkill(defLicenseYear, defLicenseMonth);
 
+// 「＋ 追加する」ボタン
 document.getElementById("add-skill-row").addEventListener("click", () => {
   if (currentSkillRows >= maxSkillRows) {
     alert("免許・資格は最大6行までです。");
@@ -492,16 +508,16 @@ document.getElementById("add-skill-row").addEventListener("click", () => {
   currentSkillRows++;
   const rowIndex = currentSkillRows;
 
-  // 左側に新しい行DOM
+  // 左側フォームに新しい行DOM
   const row = document.createElement("div");
   row.className = "row-container";
-  row.innerHTML = 
+  row.innerHTML = `
     <div class="form-inline">
       <select class="license-year"><option value="">--</option></select>
       <select class="license-month"><option value="">--</option></select>
       <input type="text" class="skill-history" placeholder="" style="text-align: left;" />
     </div>
-  ;
+  `;
   skillContainer.appendChild(row);
 
   const yearEl = row.querySelector(".license-year");
@@ -512,14 +528,16 @@ document.getElementById("add-skill-row").addEventListener("click", () => {
   syncSkillRow(yearEl, monthEl, histEl, rowIndex);
 });
 
+// 「－ 削除」ボタン
 document.getElementById("remove-skill-last").addEventListener("click", () => {
   if (currentSkillRows > 1) {
     const rows = skillContainer.querySelectorAll(".row-container");
     skillContainer.removeChild(rows[rows.length - 1]);
 
-    document.getElementById(skill-preview-year-${currentSkillRows}).textContent = "";
-    document.getElementById(skill-preview-month-${currentSkillRows}).textContent = "";
-    document.getElementById(skill-preview-history-${currentSkillRows}).textContent = "";
+    // 右側プレビュー該当行を空に
+    document.getElementById(`skill-preview-year-${currentSkillRows}`).textContent = "";
+    document.getElementById(`skill-preview-month-${currentSkillRows}`).textContent = "";
+    document.getElementById(`skill-preview-history-${currentSkillRows}`).textContent = "";
 
     currentSkillRows--;
     splitPagesIfOverflow();
@@ -551,18 +569,21 @@ function splitPagesIfOverflow() {
     }
   }
 }
+
 function createBlankPage() {
   const pageEl = document.createElement("div");
   pageEl.classList.add("resume-page");
-  pageEl.innerHTML = 
+  pageEl.innerHTML = `
     <div class="resume-preview">
       <div class="resume-content"></div>
     </div>
-  ;
+  `;
   pagesContainer.appendChild(pageEl);
   return pageEl;
 }
+
 function checkOverflow(pageEl, contentEl) {
+  // 縦方向にコンテンツがはみ出しているかどうか
   return contentEl.scrollHeight > pageEl.clientHeight;
 }
 
@@ -584,7 +605,7 @@ document.getElementById("pdf-save-btn").addEventListener("click", async () => {
     address: document.getElementById("input-address").value
   };
 
-  // GASへ送信
+  // GASへ送信（不要な場合は削除）
   try {
     const response = await fetch(scriptURL, {
       method: "POST",
@@ -606,9 +627,12 @@ document.getElementById("pdf-save-btn").addEventListener("click", async () => {
 
   for (let i = 0; i < pageElems.length; i++) {
     if (i > 0) pdf.addPage();
+
+    // html2canvasでページ全体を画像化
     const canvas = await html2canvas(pageElems[i], { scale: 2 });
     const imgData = canvas.toDataURL("image/jpeg", 1.0);
 
+    // PDF内部の寸法に合わせて画像を描画
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const imgWidthPx = canvas.width;

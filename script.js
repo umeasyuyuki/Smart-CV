@@ -2,7 +2,7 @@
  * 1) GAS連携用URL（ダミーURLを必要に応じて差し替えてください）
  ************************************************************/
 const scriptURL =
-  "https://script.google.com/macros/s/AKfycbyYmqbjwwkZlxWNfFVZi8ORT0mHw0sh9VlpYBcVsYz_UZSB63OM6LOya0UAZgZgCyhGpw/exec";
+  "https://script.google.com/macros/s/xxxxxxxxxxxxxxxxxxxxxxxxxx/exec";
 
 /************************************************************
  * 2) 履歴書HTMLテンプレート
@@ -202,7 +202,6 @@ const resumeTemplate = `
     </div>
   </div>
 `;
-
 
 // コンテナ
 const pagesContainer = document.getElementById("resume-pages");
@@ -567,9 +566,29 @@ function checkOverflow(pageEl, contentEl) {
 }
 
 /************************************************************
+ * ▼ 追加：利用規約「同意する」ボタンとPDF保存ボタンの制御
+ ************************************************************/
+let termsAgreed = false;
+const pdfButton = document.getElementById("pdf-save-btn");
+const agreeBtn = document.getElementById("agree-terms-btn");
+
+// 同意するボタン
+agreeBtn.addEventListener("click", () => {
+  termsAgreed = true;
+  // PDF保存ボタンの背景色を同意後の色(緑)に変更
+  pdfButton.style.backgroundColor = "#2ecc71";
+});
+
+/************************************************************
  * 9) PDF保存ボタン
  ************************************************************/
-document.getElementById("pdf-save-btn").addEventListener("click", async () => {
+pdfButton.addEventListener("click", async () => {
+  // まず同意確認
+  if (!termsAgreed) {
+    alert("利用規約に同意する必要があります。");
+    return;
+  }
+
   // ページ分割確定
   splitPagesIfOverflow();
 
@@ -584,7 +603,7 @@ document.getElementById("pdf-save-btn").addEventListener("click", async () => {
     address: document.getElementById("input-address").value
   };
 
-  // GASへ送信
+  // GASへ送信（必要に応じて削除または修正）
   try {
     const response = await fetch(scriptURL, {
       method: "POST",

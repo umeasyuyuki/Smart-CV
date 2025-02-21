@@ -2,13 +2,13 @@
  * 1) GAS連携用URL（ダミーURLを必要に応じて差し替えてください）
  ************************************************************/
 const scriptURL =
-  "https://script.google.com/macros/s/xxxxxxxxxxxxxxxxxxxxxxxxxx/exec";
+  "https://script.google.com/macros/s/AKfycbyYmqbjwwkZlxWNfFVZi8ORT0mHw0sh9VlpYBcVsYz_UZSB63OM6LOya0UAZgZgCyhGpw/exec";
 
 /************************************************************
  * 2) 履歴書HTMLテンプレート
  ************************************************************/
 // 学歴・職歴12行、免許・資格6行をあらかじめテーブルに用意
-const resumeTemplate = `
+const resumeTemplate = 
   <div class="resume-preview">
     <div class="resume-content" id="resume-content-whole">
       <div style="display: flex; justify-content: space-between; margin-bottom: 5mm;">
@@ -122,13 +122,13 @@ const resumeTemplate = `
           <!-- 12行 -->
           ${[...Array(12)].map((_, i) => {
             const row = i + 1;
-            return `
+            return 
               <tr id="edu-row-${row}" class="education-value">
                 <td class="education-year-value" id="edu-preview-year-${row}"></td>
                 <td class="education-container-month-value" id="edu-preview-month-${row}"></td>
                 <td class="education-history-value" id="edu-preview-work-${row}"></td>
               </tr>
-            `;
+            ;
           }).join("")}
         </table>
       </div>
@@ -144,13 +144,13 @@ const resumeTemplate = `
           <!-- 6行 -->
           ${[...Array(6)].map((_, i) => {
             const row = i + 1;
-            return `
+            return 
               <tr id="skill-row-${row}" class="skill-value">
                 <td class="skill-year-value" id="skill-preview-year-${row}"></td>
                 <td class="skill-container-month-value" id="skill-preview-month-${row}"></td>
                 <td class="skill-history-value" id="skill-preview-history-${row}"></td>
               </tr>
-            `;
+            ;
           }).join("")}
         </table>
       </div>
@@ -201,7 +201,8 @@ const resumeTemplate = `
 
     </div>
   </div>
-`;
+;
+
 
 // コンテナ
 const pagesContainer = document.getElementById("resume-pages");
@@ -228,7 +229,7 @@ function setTodayDate() {
   const d = now.getDate();
   const reiwa = y - 2018; // 2019年=令和元年
   const todayDateEl = document.getElementById("preview-today-date");
-  todayDateEl.textContent = `令和 ${reiwa} 年 ${m} 月 ${d} 日現在`;
+  todayDateEl.textContent = 令和 ${reiwa} 年 ${m} 月 ${d} 日現在;
 }
 setTodayDate();
 
@@ -356,9 +357,9 @@ const defEduWork = eduContainer.querySelector(".edu-work");
 
 // 行同期用関数
 function syncEduRow(leftYearEl, leftMonthEl, leftWorkEl, rowIndex) {
-  const previewYear = document.getElementById(`edu-preview-year-${rowIndex}`);
-  const previewMonth = document.getElementById(`edu-preview-month-${rowIndex}`);
-  const previewWork = document.getElementById(`edu-preview-work-${rowIndex}`);
+  const previewYear = document.getElementById(edu-preview-year-${rowIndex});
+  const previewMonth = document.getElementById(edu-preview-month-${rowIndex});
+  const previewWork = document.getElementById(edu-preview-work-${rowIndex});
 
   function doSync() {
     previewYear.textContent = leftYearEl.value;
@@ -402,13 +403,13 @@ document.getElementById("add-education-row").addEventListener("click", () => {
   // 左側に新しい行DOM
   const row = document.createElement("div");
   row.className = "row-container";
-  row.innerHTML = `
+  row.innerHTML = 
     <div class="form-inline">
       <select class="edu-year"><option value="">--</option></select>
       <select class="edu-month"><option value="">--</option></select>
       <input type="text" class="edu-work" placeholder="" />
     </div>
-  `;
+  ;
   eduContainer.appendChild(row);
 
   // populate
@@ -427,9 +428,9 @@ document.getElementById("remove-education-last").addEventListener("click", () =>
     eduContainer.removeChild(rows[rows.length - 1]);
 
     // 右側の該当行を空に
-    document.getElementById(`edu-preview-year-${currentEduRows}`).textContent = "";
-    document.getElementById(`edu-preview-month-${currentEduRows}`).textContent = "";
-    document.getElementById(`edu-preview-work-${currentEduRows}`).textContent = "";
+    document.getElementById(edu-preview-year-${currentEduRows}).textContent = "";
+    document.getElementById(edu-preview-month-${currentEduRows}).textContent = "";
+    document.getElementById(edu-preview-work-${currentEduRows}).textContent = "";
 
     currentEduRows--;
     splitPagesIfOverflow();
@@ -449,9 +450,9 @@ const defLicenseMonth = skillContainer.querySelector(".license-month");
 const defSkillHistory = skillContainer.querySelector(".skill-history");
 
 function syncSkillRow(yearEl, monthEl, histEl, rowIndex) {
-  const previewYear = document.getElementById(`skill-preview-year-${rowIndex}`);
-  const previewMonth = document.getElementById(`skill-preview-month-${rowIndex}`);
-  const previewHistory = document.getElementById(`skill-preview-history-${rowIndex}`);
+  const previewYear = document.getElementById(skill-preview-year-${rowIndex});
+  const previewMonth = document.getElementById(skill-preview-month-${rowIndex});
+  const previewHistory = document.getElementById(skill-preview-history-${rowIndex});
 
   function doSync() {
     previewYear.textContent = yearEl.value;
@@ -494,13 +495,13 @@ document.getElementById("add-skill-row").addEventListener("click", () => {
   // 左側に新しい行DOM
   const row = document.createElement("div");
   row.className = "row-container";
-  row.innerHTML = `
+  row.innerHTML = 
     <div class="form-inline">
       <select class="license-year"><option value="">--</option></select>
       <select class="license-month"><option value="">--</option></select>
       <input type="text" class="skill-history" placeholder="" style="text-align: left;" />
     </div>
-  `;
+  ;
   skillContainer.appendChild(row);
 
   const yearEl = row.querySelector(".license-year");
@@ -516,9 +517,9 @@ document.getElementById("remove-skill-last").addEventListener("click", () => {
     const rows = skillContainer.querySelectorAll(".row-container");
     skillContainer.removeChild(rows[rows.length - 1]);
 
-    document.getElementById(`skill-preview-year-${currentSkillRows}`).textContent = "";
-    document.getElementById(`skill-preview-month-${currentSkillRows}`).textContent = "";
-    document.getElementById(`skill-preview-history-${currentSkillRows}`).textContent = "";
+    document.getElementById(skill-preview-year-${currentSkillRows}).textContent = "";
+    document.getElementById(skill-preview-month-${currentSkillRows}).textContent = "";
+    document.getElementById(skill-preview-history-${currentSkillRows}).textContent = "";
 
     currentSkillRows--;
     splitPagesIfOverflow();
@@ -553,11 +554,11 @@ function splitPagesIfOverflow() {
 function createBlankPage() {
   const pageEl = document.createElement("div");
   pageEl.classList.add("resume-page");
-  pageEl.innerHTML = `
+  pageEl.innerHTML = 
     <div class="resume-preview">
       <div class="resume-content"></div>
     </div>
-  `;
+  ;
   pagesContainer.appendChild(pageEl);
   return pageEl;
 }
@@ -566,29 +567,9 @@ function checkOverflow(pageEl, contentEl) {
 }
 
 /************************************************************
- * ▼ 追加：利用規約「同意する」ボタンとPDF保存ボタンの制御
- ************************************************************/
-let termsAgreed = false;
-const pdfButton = document.getElementById("pdf-save-btn");
-const agreeBtn = document.getElementById("agree-terms-btn");
-
-// 同意するボタン
-agreeBtn.addEventListener("click", () => {
-  termsAgreed = true;
-  // PDF保存ボタンの背景色を同意後の色(緑)に変更
-  pdfButton.style.backgroundColor = "#2ecc71";
-});
-
-/************************************************************
  * 9) PDF保存ボタン
  ************************************************************/
-pdfButton.addEventListener("click", async () => {
-  // まず同意確認
-  if (!termsAgreed) {
-    alert("利用規約に同意する必要があります。");
-    return;
-  }
-
+document.getElementById("pdf-save-btn").addEventListener("click", async () => {
   // ページ分割確定
   splitPagesIfOverflow();
 
@@ -603,7 +584,7 @@ pdfButton.addEventListener("click", async () => {
     address: document.getElementById("input-address").value
   };
 
-  // GASへ送信（必要に応じて削除または修正）
+  // GASへ送信
   try {
     const response = await fetch(scriptURL, {
       method: "POST",

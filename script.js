@@ -587,11 +587,44 @@ function checkOverflow(pageEl, contentEl) {
   return contentEl.scrollHeight > pageEl.clientHeight;
 }
 
+
+/************************************************************
+ * チェックボックスでPDF保存ボタンの状態を切り替える
+ ************************************************************/
+const pdfSaveBtn = document.getElementById("pdf-save-btn");
+const agreeTerms = document.getElementById("agree-terms");
+
+// チェック時/非チェック時にボタンのdisableと色を切り替える関数
+function updatePdfButtonState() {
+  if (agreeTerms.checked) {
+    // チェックON → ボタンを有効化
+    pdfSaveBtn.disabled = false;
+    pdfSaveBtn.style.background = "#2ecc71"; // 通常の緑色
+    pdfSaveBtn.style.cursor = "pointer";
+  } else {
+    // チェックOFF → ボタンを無効化
+    pdfSaveBtn.disabled = true;
+    pdfSaveBtn.style.background = "#ccc";
+    pdfSaveBtn.style.cursor = "not-allowed";
+  }
+}
+
+// 同意するチェックが変化したら呼び出す
+agreeTerms.addEventListener("change", updatePdfButtonState);
+
+// ページ読み込み時にも初期状態を適用（念のため）
+updatePdfButtonState();
+
+
 /************************************************************
  * 9) PDF保存ボタン
  ************************************************************/
 document.getElementById("pdf-save-btn").addEventListener("click", async () => {
-  // ページ分割確定
+  // もし同意が外れているのに何らかの理由でクリックできた場合、最終チェック
+  if (!agreeTerms.checked) {
+    alert("利用規約に同意する必要があります。");
+    return; // 保存処理へ進ませない
+  }
   splitPagesIfOverflow();
 
   // 送信例データ

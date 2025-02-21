@@ -9,14 +9,15 @@
     /* リセット・共通スタイル */
     * {
       box-sizing: border-box;
-    }
-    html, body {
       margin: 0;
       padding: 0;
+    }
+    html, body {
       font-size: 11pt;
       height: 100%;
       color: #000;
       font-family: sans-serif;
+      background-color: #f5f5f5;
     }
 
     /* 全体レイアウト */
@@ -26,110 +27,116 @@
       overflow: hidden;
     }
 
+    /* 左カラム */
     .left {
-      background: #f7f9fc;
-      border-right: 1px solid #ccc;
-      padding-left: 20px;
-      padding-right: 20px;
-      padding-bottom: 20px;
+      background: #ffffff;
+      border-right: 1px solid #ddd;
+      padding: 20px;
       overflow-y: auto;
       width: 50%;
     }
+
+    /* 右カラム */
     .right {
       background: #9e9999;
-      /* 横スクロールを有効にする */
       overflow-x: auto;
       overflow-y: auto; 
       width: 50%;
       padding: 20px;
     }
 
-    /* 左画面内の入力欄に角丸を適用 */
     .left input[type="text"],
     .left textarea,
     .left select {
-      border-radius: 10px;
+      border-radius: 6px;
       border: 1px solid #ccc;
+      padding: 8px;
+      font-size: 0.95rem;
+      width: 100%;
+    }
+    .left input[type="text"]:focus,
+    .left textarea:focus,
+    .left select:focus {
+      outline: none;
+      border-color: #80bdff;
+      box-shadow: 0 0 4px rgba(0,123,255,0.3);
     }
 
     /* ヘッダー */
     .header-left {
-      background-color: #fff;
-      margin-left: -20px;
-      margin-right: -20px;
-      margin-top: -20px;
+      background-color: transparent;
       text-align: center;
-      border-bottom: 1px solid #ccc;
-      padding: 0;
+      border-bottom: none;
       margin-bottom: 20px;
+      padding-bottom: 20px;
     }
     .header-left h1 {
-      padding-top: 20px;
-      padding-bottom: 0;
+      font-size: 28px;
+      line-height: 1.2;
+      margin-bottom: 6px;
     }
     .header-left .smart {
       color: #000;
       font-family: "Istok Web", sans-serif;
-      font-size: 40px;
+      font-size: 28px;
+      font-weight: bold;
     }
     .header-left .dash {
       font-family: "Istok Web", sans-serif;
-      font-size: 40px;
+      font-size: 28px;
       margin: 0 5px;
     }
     .header-left .cv {
       color: #2cddb4;
       font-family: "Istok Web", sans-serif;
-      font-size: 40px;
+      font-size: 28px;
+      font-weight: bold;
     }
     .header-left h2 {
       font-family: "Istok Web", sans-serif;
-      font-size: 18px;
+      font-size: 16px;
       color: #333;
+      margin-top: 8px;
     }
 
-    /* 選択ガイドのテーブル */
+    /* 選択ガイド */
     .choice-box {
-      border: 1px solid #000;
-      margin: 0 auto;
-      margin-top: 40px;
+      display: block;
+      background-color: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      border-radius: 6px;
+      margin: 0 auto 20px;
+      padding: 16px;
       text-align: left;
-      font-size: 20px;
-      color: #000;
+      font-size: 16px;
+      color: #333;
+      max-width: 90%;
     }
-    .first-box {
-      border: 1px solid #000;
-      margin: 0 auto;
-      height: 10%;
-      margin-top: 60px;
-      text-align: center;
-      border-radius: 100px;
-      font-size: 24px;
-      color: #000;
-      background-color: #d8fff9;
-    }
+    .first-box,
     .second-box {
-      border: 1px solid #000;
-      margin: 0 auto;
-      height: 10%;
-      margin-top: 60px;
+      display: block;
+      background-color: #ffffff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      margin: 0 auto 20px;
+      padding: 16px;
       text-align: center;
-      border-radius: 100px;
-      font-size: 24px;
-      color: #000;
-      background-color: #d8fff9;
+      font-size: 18px;
+      color: #333;
+      max-width: 90%;
     }
 
     /* アップロード */
     .upload-wrapper {
       margin-bottom: 20px;
-      margin-left: 80px;
+      margin-left: 0;
+      width: 100%;
     }
     .upload-label {
       display: block;
       font-weight: bold;
       margin-bottom: 8px;
-      font-size: 19.5px;
+      font-size: 15px;
     }
     .upload-area {
       border: 2px dashed #ccc;
@@ -138,10 +145,13 @@
       cursor: pointer;
       transition: border-color 0.3s, background-color 0.3s;
       height: 110px;
-      width: 53%;
-      margin: 0 auto;
       text-align: center;
-      margin-left: 28px;
+      margin: 0 auto;
+      max-width: 90%;
+      background-color: #fafafa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     .upload-text {
       color: #888;
@@ -155,62 +165,40 @@
     /* セクション見出し */
     .section-title {
       margin-top: 25px;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: bold;
-      border-bottom: 2px solid #2c3e50;
-      padding-bottom: 5px;
-      margin-bottom: 10px;
       color: #2c3e50;
+      padding-bottom: 4px;
+      border-bottom: 2px solid #2c3e50;
+      margin-bottom: 12px;
     }
 
     /* フォーム関連 */
     .form-group {
-      margin: 30px 0 0 80px;
-      font-size: 20px;
-      width: 75%;
+      margin-bottom: 20px;
     }
     .form-row {
       display: flex;
-      gap: 10px;
+      flex-wrap: wrap;
+      gap: 16px;
       margin-bottom: 16px;
     }
     .form-col {
       flex: 1;
+      min-width: 200px;
       display: flex;
       flex-direction: column;
+      margin-bottom: 8px;
     }
     label {
       font-weight: bold;
-      margin-bottom: 6px;
-      font-size: 0.9rem;
-    }
-    input[type="text"] {
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      transition: box-shadow 0.2s;
-    }
-    input[type="text"]:focus {
-      border-color: #80bdff;
-      box-shadow: 0 0 4px rgba(0,123,255,0.3);
-      outline: none;
+      margin-bottom: 4px;
+      font-size: 0.85rem;
     }
     .simple-textarea {
-      width: 100%;
       min-height: 80px;
-      border: 1px solid #ccc;
-      border-radius: 12px;
-      padding: 8px;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       resize: vertical;
-      margin-bottom: 16px;
-      transition: box-shadow 0.2s;
-      outline: none;
-    }
-    .simple-textarea:focus {
-      border-color: #80bdff;
-      box-shadow: 0 0 4px rgba(0,123,255,0.3);
     }
 
     /* ボタン */
@@ -221,14 +209,29 @@
     }
     .btn-group button,
     #download-pdf,
-    #download-uploaded-file {
-      padding: 6px 12px;
+    #download-uploaded-file,
+    #bulk-generate-btn {
+      padding: 8px 16px;
       border: 1px solid transparent;
       cursor: pointer;
       border-radius: 20px;
       font-size: 0.9rem;
       font-weight: bold;
       transition: background-color 0.2s, border-color 0.2s;
+    }
+    /* 一括生成ボタンを中央配置＆大きく */
+    #bulk-generate-btn {
+      display: block;         /* ブロック化して中央寄せ */
+      margin: 20px auto;      /* 上下マージン＋左右autoで中央 */
+      background-color: #007bff;
+      color: #fff;
+      border-color: #007bff;
+      font-size: 1rem;        /* フォントサイズやパディングで大きめに */
+      padding: 12px 24px;
+    }
+    #bulk-generate-btn:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
     }
 
     /* 追加・削除ボタン */
@@ -259,29 +262,52 @@
       border-color: #bd2130;
     }
 
-    /* 一括生成ボタン */
-    #bulk-generate-btn {
-      display: block;
-      margin: 10px auto;
-      background-color: #007bff;
+    /* PDFダウンロードボタン */
+    #download-pdf {
+      background-color: #28a745;
       color: #fff;
-      border: 1px solid #007bff;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.2s, border-color 0.2s;
-      margin-left: 110px;
+      border-color: #28a745;
+      margin: 0 auto;
+      display: inline-block;
     }
-    #bulk-generate-btn:hover {
-      background-color: #0056b3;
-      border-color: #0056b3;
+    #download-pdf:hover {
+      background-color: #218838;
+      border-color: #1e7e34;
     }
 
-    /* プレビュー (A4固定) */
+    /* 利用規約 */
+    .terms-box {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #fff;
+      padding: 10px;
+      margin-top: 16px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+    }
+
+    /* ズーム操作ボタン */
+    .zoom-controls {
+      text-align: center;
+      margin-bottom: 1em;
+    }
+    .zoom-controls button {
+      font-size: 0.9rem;
+      padding: 6px 14px;
+      margin: 0 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      background-color: #ccc;
+      border: none;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    .zoom-controls button:hover {
+      background-color: #bbb;
+    }
+
+    /* 右カラム プレビュー (A4固定) */
     .resume-pages-wrap {
-      /* 拡大・縮小の対象になる要素 */
       transform-origin: top left; /* 左上を基準にスケール */
     }
     .resume-page {
@@ -292,8 +318,6 @@
       box-sizing: border-box;
       background: #fff;
     }
-
-    /* タイトル */
     .preview-title {
       text-align: center;
       font-size: 16pt;
@@ -305,20 +329,14 @@
       text-align: right;
       margin-bottom: 10px;
     }
-
-    /* セクションタイトル */
     .preview-section-title {
       font-weight: bold;
       font-size: 12pt;
       margin: 10px 0 5px;
       text-decoration: underline;
     }
-
-    /* 職務要約部分 */
     .summary-block {
       width: 100%;
-      overflow-y: hidden;
-      overflow-x: hidden;
       white-space: pre-wrap;
       word-wrap: break-word;
       box-sizing: border-box;
@@ -327,59 +345,23 @@
       overflow: hidden;
       resize: none;
     }
-
-    /* 免許・資格テーブル */
-    .license-table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-      margin-bottom: 0px;
-    }
-    .license-table th {
-      border: 1px solid #000;
-      padding: 2px;
-      text-align: center;
-      vertical-align: middle;
-    }
-    .license-table td {
-      border: 1px solid #000;
-      padding: 2px;
-      text-align: center;
-      vertical-align: middle;
-    }
-
-    /* 語学テーブル */
+    .license-table,
     .lang-table {
       width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
-      margin-bottom: 0px;
+      margin-bottom: 8px;
     }
-    .lang-table th {
-      border: 1px solid #000;
-      padding: 2px;
-      text-align: center;
-      vertical-align: middle;
-      width: 15mm;
-    }
+    .license-table th,
+    .license-table td,
+    .lang-table th,
     .lang-table td {
       border: 1px solid #000;
-      padding: 2px;
+      padding: 4px;
       text-align: center;
       vertical-align: middle;
+      font-size: 0.9rem;
     }
-
-    /* 追加ブロックの区切り線 */
-    #career-container .sub-section,
-    #license-container .sub-section,
-    #lang-container .sub-section {
-      border-top: 1px solid #000;
-      margin-top: 10px;
-      padding-top: 10px;
-      margin-bottom: 10px;
-    }
-
-    /* 「期間／業務内容」テーブル */
     .career-format-table {
       width: 100%;
       border-collapse: collapse;
@@ -392,42 +374,24 @@
       vertical-align: top;
       word-wrap: break-word;
     }
-    /* ▼ ヘッダー行をグレーにする ▼ */
     .career-format-table thead th {
       background-color: #D9D9D9;
     }
-
-    /* PDFダウンロードボタン等 */
-    #download-pdf {
-      background-color: #28a745;
-      color: #fff;
-      border-color: #28a745;
-      margin-left: 0 auto;
-    }
-    #download-pdf:hover {
-      background-color: #218838;
-      border-color: #1e7e34;
-      margin-left: 0 auto;
+    #career-container .sub-section,
+    #license-container .sub-section,
+    #lang-container .sub-section {
+      border-top: 1px solid #000;
+      margin-top: 10px;
+      padding-top: 10px;
+      margin-bottom: 10px;
     }
 
-    /* ==== 追加: ズームスライダーのスタイル ==== */
-    .zoom-controls {
-      text-align: center;
-      margin-bottom: 1em;
-    }
-    .zoom-controls label {
-      font-weight: bold;
-      margin-right: 8px;
-    }
-
-    /* 追加: 利用規約の囲み枠 */
-    .terms-box {
-      border: 1px solid #000;
-      border-radius: 6px;
-      background: #fff;
-      padding: 10px;
-      margin-top: 16px;
-      margin-bottom: 16px;
+    /* 職務要約の文字数カウンター */
+    #char-counter {
+      font-size: 0.85rem;
+      color: #666;
+      text-align: right;
+      margin-top: -5px;
     }
   </style>
 
@@ -450,23 +414,16 @@
       </div>
 
       <!-- 選択ガイド -->
-      <table class="choice-box">
-        <tr>
-          <td>
-            <strong>
-              既に経歴書をお持ちの方は、➀にお進みください（予想作成時間３０秒）<br>
-              お持ちでない方は、②にお進みください。（予想作成時間５分）
-            </strong>
-          </td>
-        </tr>
-      </table>
-      <table class="first-box">
-        <tr>
-          <td>
-            <strong>➀に当てはまる方は、以下の項目への入力をお願いします。</strong>
-          </td>
-        </tr>
-      </table>
+      <div class="choice-box">
+        <strong>
+          既に経歴書をお持ちの方は、➀にお進みください（予想作成時間３０秒）<br>
+          お持ちでない方は、②にお進みください。（予想作成時間５分）
+        </strong>
+      </div>
+
+      <div class="first-box">
+        <strong>➀に当てはまる方は、以下の項目への入力をお願いします。</strong>
+      </div>
 
       <!-- ファイルアップロード -->
       <div class="form-group upload-wrapper">
@@ -481,18 +438,14 @@
         <input type="file" id="resume-file" accept=".pdf,.doc,.docx" style="display: none">
       </div>
 
-      <!-- 一括生成ボタン -->
-      <button id="bulk-generate-btn" class="btn btn-primary">
+      <!-- 一括生成ボタン(大きめ＆中央配置) -->
+      <button id="bulk-generate-btn">
         一括生成する
       </button>
 
-      <table class="second-box">
-        <tr>
-          <td>
-            <strong>②に当てはまる方は、以下の項目への入力をお願いします。</strong>
-          </td>
-        </tr>
-      </table>
+      <div class="second-box">
+        <strong>②に当てはまる方は、以下の項目への入力をお願いします。</strong>
+      </div>
 
       <!-- 基本情報 -->
       <div class="section-title">基本情報</div>
@@ -588,7 +541,7 @@
       <div class="section-title">自己PR</div>
       <textarea class="simple-textarea" id="input-pr"></textarea>
 
-      <!-- ▼ ここから利用規約を追加 ▼ -->
+      <!-- 利用規約 -->
       <div class="section-title">利用規約</div>
       <div class="terms-box">
         <p><strong>第1条【定義】</strong></p>
@@ -599,22 +552,19 @@
           <li>利用者：本サービスの内容を全て理解・承諾した上で当方のサービスを利用する者</li>
           <li>…（以下、利用規約本文を必要に応じて追加してください）</li>
         </ol>
-        <!-- 必要に応じて利用規約のテキストを追記 -->
+      </div>
+      <div style="margin: 10px 0; text-align: center;">
+        <input 
+          type="checkbox" 
+          id="agree-terms"
+          style="transform: scale(1.5); transform-origin: center;"
+        >
+        <label for="agree-terms" style="font-weight: bold;">同意する</label>
       </div>
 
-      <!-- 同意チェックボックス -->
-  <div style="margin: 10px 0; text-align: center;">
-  <input type="checkbox" id="agree-terms">
-  <label for="agree-terms" style="font-weight: bold;">同意する</label>
-  </div>
-
-      <!-- ▲ 利用規約ここまで ▲ -->
-
-
-      <!-- PDFダウンロードボタンを中央寄せ -->
+      <!-- PDFダウンロードボタン -->
       <div style="text-align: center; margin-top: 24px;">
-        <!-- IDを download-pdf にし、JSと対応させる -->
-        <button id="download-pdf" style="padding:8px 16px; font-size:0.9rem; cursor:pointer; border-radius: 20px;">
+        <button id="download-pdf">
           PDFダウンロード
         </button>
       </div>
@@ -622,10 +572,11 @@
 
     <!-- 右カラム（プレビュー） -->
     <div class="right">
-      <!-- ▼ 追加: ズームスライダーUI -->
+
+      <!-- ズーム操作ボタンに変更 -->
       <div class="zoom-controls">
-        <label for="zoom-range">ズーム</label>
-        <input type="range" id="zoom-range" min="50" max="200" value="100" step="10" />
+        <button id="zoom-out">- 10%</button>
+        <button id="zoom-in">+ 10%</button>
       </div>
 
       <div class="resume-pages-wrap" id="resumePages">
@@ -633,7 +584,6 @@
       </div>
     </div><!-- /right -->
   </div><!-- /container -->
-
 
   <!-- ==================== ここからJSをまとめて埋め込み ==================== -->
   <script>
@@ -652,6 +602,9 @@
 
     // ズーム用変数
     let currentZoom = 1.0;        // デフォルト 100%
+    const MIN_ZOOM = 0.5;
+    const MAX_ZOOM = 2.0;
+    const ZOOM_STEP = 0.1;        // 10%
 
     /***************************************************
      * (C) ページ初期化
@@ -714,13 +667,23 @@
         });
       }
 
-      // ズームスライダー設定
-      const zoomRange = document.getElementById("zoom-range");
-      zoomRange.addEventListener("input", (e) => {
-        const zoomVal = e.target.value;   // 50 - 200
-        currentZoom = zoomVal / 100;      // 0.5 - 2.0
-        applyZoom(currentZoom);
-      });
+      // ▼ ズーム操作(ボタン)
+      const zoomOutBtn = document.getElementById("zoom-out");
+      const zoomInBtn = document.getElementById("zoom-in");
+      if (zoomOutBtn && zoomInBtn) {
+        zoomOutBtn.addEventListener("click", () => {
+          if (currentZoom > MIN_ZOOM) {
+            currentZoom = Math.max(MIN_ZOOM, currentZoom - ZOOM_STEP);
+            applyZoom(currentZoom);
+          }
+        });
+        zoomInBtn.addEventListener("click", () => {
+          if (currentZoom < MAX_ZOOM) {
+            currentZoom = Math.min(MAX_ZOOM, currentZoom + ZOOM_STEP);
+            applyZoom(currentZoom);
+          }
+        });
+      }
 
       console.log("[DEBUG] Initialization complete.");
     });
@@ -851,7 +814,7 @@
     }
 
     /***************************************************
-     * (F+) テーブルの上線だけ消す関数
+     * テーブルの上線だけ消す関数(ダミー/必要に応じて)
      ***************************************************/
     function removeTableTopLine(wrapperElem) {
       const tables = wrapperElem.querySelectorAll("table");
@@ -870,8 +833,6 @@
       const removeBtn = document.getElementById("remove-career-row");
       const container = document.getElementById("career-container");
       const firstBlock = document.getElementById("career-first");
-
-      removeTableTopLine(firstBlock);
 
       if (addBtn) {
         addBtn.addEventListener("click", () => {
@@ -922,8 +883,6 @@
       const licenseContainer = document.getElementById('license-container');
       const firstLicense = document.getElementById('license-first');
 
-      removeTableTopLine(firstLicense);
-
       if (addBtn) {
         addBtn.addEventListener('click', () => {
           licenseCount++;
@@ -970,8 +929,6 @@
       const removeBtn = document.getElementById('remove-lang-row');
       const langContainer = document.getElementById('lang-container');
       const firstLang = document.getElementById('lang-first');
-
-      removeTableTopLine(firstLang);
 
       if (!addBtn || !removeBtn || !langContainer || !firstLang) return;
 

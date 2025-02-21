@@ -679,6 +679,67 @@ document.getElementById("pdf-save-btn").addEventListener("click", async () => {
   pdf.save("履歴書.pdf");
 });
 
+
+/************************************************************
+ * 志望動機自動生成ボタン
+ ************************************************************/
+
+// (1) 箇条書き入力欄とボタン、そして既存の志望動機欄を取得
+const bulletPointsInput = document.getElementById("motivation-bullet-points");
+const generateButton = document.getElementById("generate-motivation");
+const motivationInput = document.getElementById("input-motivation");
+
+// (2) 自動生成ボタン押下時の処理
+generateButton.addEventListener("click", async () => {
+  // 箇条書き入力欄の内容
+  const bulletPoints = bulletPointsInput.value.trim();
+
+  if (!bulletPoints) {
+    alert("箇条書きの内容を入力してください。");
+    return;
+  }
+
+  try {
+    // (3) DifyのAPIにリクエストを送る
+    // 下記は例としてPOSTで bulletPoints を送信する想定のサンプルです
+    // ★★★ 実際のエンドポイントURL・ヘッダー・送信内容はご自身のDify設定にあわせて書き換えてください ★★★
+    const response = await fetch("https://api.dify.ai/v1/your_app_endpoint", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // Dify APIキーなどが必要であれば下記のように設定
+        "Authorization": "Bearer app-9RoCGLstEdkBeg591WYtlLu3"
+      },
+      body: JSON.stringify({
+        // ここにAPIが必要とするパラメータを適宜記述
+        prompt: bulletPoints
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Dify APIエラー: " + response.statusText);
+    }
+
+    // (4) Difyからのレスポンスを取得
+    const data = await response.json();
+    // data内のどこに文章があるかはDifyの返却仕様にあわせてください
+    // 例: data.result に生成された文章が入っていると仮定します
+    const generatedText = data.result;
+
+    // (5) 志望動機欄に生成文章を代入し、プレビューを更新
+    motivationInput.value = generatedText;
+
+    // 既存のプレビュー同期処理を発火させるため、人工的にinputイベントを起こす
+    motivationInput.dispatchEvent(new Event("input"));
+
+  } catch (error) {
+    console.error(error);
+    alert("エラーが発生しました: " + error.message);
+  }
+});
+
+
+
 /************************************************************
  * 10) 「一括生成する」ボタン
  ************************************************************/

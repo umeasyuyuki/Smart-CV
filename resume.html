@@ -242,7 +242,22 @@
 
     <!-- 志望動機 -->
     <div class="section-title">志望動機</div>
-    <textarea class="simple-textarea" id="input-motivationjr"></textarea>
+    <div class="form-group">
+  <!-- 箇条書き入力用のテキストエリア -->
+  <textarea
+    id="motivation-bullet-points"
+    placeholder="ここに箇条書きで書きたいポイントを記入してください。"
+    rows="5"
+  ></textarea>
+  <!-- 自動生成ボタン -->
+  <button
+    id="generate-motivation"
+    class="btn btn-primary"
+    style="margin-top: 8px;"
+  >
+    志望動機を自動作成
+  </button>
+</div>
     
     <div class="form-group">
       <textarea id="input-motivation" placeholder=""></textarea>

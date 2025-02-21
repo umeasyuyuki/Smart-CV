@@ -711,7 +711,6 @@ generateButton.addEventListener("click", async () => {
         "Authorization": "Bearer app-9RoCGLstEdkBeg591WYtlLu3"
       },
       body: JSON.stringify({
-        workflow_id: "07d33ea3-4e66-4924-9953-aa333df723f5"
         // ここにAPIが必要とするパラメータを適宜記述
         prompt: bulletPoints
       })

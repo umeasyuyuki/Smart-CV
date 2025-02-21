@@ -355,7 +355,18 @@
     border-radius: 20px;
     margin: 0 auto;
   }
-  
+
+/* 利用規約 */
+    .terms-box {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #fff;
+      padding: 10px;
+      margin-top: 16px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+    }
+
   /************************************************************
    * 右カラム：履歴書プレビュー (複数ページ分割)
    ************************************************************/

@@ -703,7 +703,7 @@ generateButton.addEventListener("click", async () => {
     // (3) DifyのAPIにリクエストを送る
     // 下記は例としてPOSTで bulletPoints を送信する想定のサンプルです
     // ★★★ 実際のエンドポイントURL・ヘッダー・送信内容はご自身のDify設定にあわせて書き換えてください ★★★
-    const response = await fetch("https://api.dify.ai/v1/your_app_endpoint", {
+    const response = await fetch("https://api.dify.ai/v1/workflows/run", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

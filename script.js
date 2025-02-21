@@ -689,6 +689,9 @@ const bulletPointsInput = document.getElementById("motivation-bullet-points");
 const generateButton = document.getElementById("generate-motivation");
 const motivationInput = document.getElementById("input-motivation");
 
+const WORKFLOW_ID = "07d33ea3-4e66-4924-9953-aa333df723f5"; // 例: "12345678-abcd-efgh-ijkl-9876543210mn"
+const DIFy_API_KEY = "Bearer app-9RoCGLstEdkBeg591WYtlLu3"; // 例: "Bearer app-XXXXXX"
+
 // (2) 自動生成ボタン押下時の処理
 generateButton.addEventListener("click", async () => {
   // 箇条書き入力欄の内容
@@ -700,38 +703,49 @@ generateButton.addEventListener("click", async () => {
   }
 
   try {
-    // (3) DifyのAPIにリクエストを送る
-    // 下記は例としてPOSTで bulletPoints を送信する想定のサンプルです
-    // ★★★ 実際のエンドポイントURL・ヘッダー・送信内容はご自身のDify設定にあわせて書き換えてください ★★★
+    // (4) Dify APIに送るリクエストボディを作成
+    // ※ "text" や "prompt" 等、inputs のフィールド名はDifyのワークフロー設定に合わせて変更
+    const requestBody = {
+      workflow_id: WORKFLOW_ID,
+      inputs: {
+        text: bulletPoints
+      },
+      user: "guest_user" // 必要に応じてユーザーIDなどを入れる
+    };
+
+    // (5) DifyのAPIにリクエストを送る
     const response = await fetch("https://api.dify.ai/v1/workflows/run", {
       method: "POST",
+      mode: "cors", // CORS対策で追加(必要なら)
       headers: {
-        "Content-Type": "application/json",
-        // Dify APIキーなどが必要であれば下記のように設定
-        "Authorization": "Bearer app-9RoCGLstEdkBeg591WYtlLu3"
+       "Content-Type": "application/json",
+       "Authorization": "Bearer app-9RoCGLstEdkBeg591WYtlLu3"
+       "Authorization": DIFy_API_KEY
       },
-      body: JSON.stringify({
-        // ここにAPIが必要とするパラメータを適宜記述
-        prompt: bulletPoints
-      })
+      body: JSON.stringify(requestBody)
     });
 
+    // (6) レスポンスのステータスをチェック
     if (!response.ok) {
-      throw new Error("Dify APIエラー: " + response.statusText);
+      // 400, 401, 500等の場合はエラーをthrow
+      const errorData = await response.json();
+      throw new Error(
+        `Dify APIエラー: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`
+      );
     }
 
-    // (4) Difyからのレスポンスを取得
+    // (7) Difyからのレスポンスを取得
     const data = await response.json();
-    // data内のどこに文章があるかはDifyの返却仕様にあわせてください
-    // 例: data.result に生成された文章が入っていると仮定します
-    const generatedText = data.result;
+    console.log("Difyレスポンス:", data);
 
-    // (5) 志望動機欄に生成文章を代入し、プレビューを更新
+    // (8) data.result や data.outputs など、
+    //     ワークフローの設定によって文章が格納されるキーが異なる
+    //     下記は例: "data.result" に文章が入っているケース
+    const generatedText = data.result || data.outputs || "生成テキストなし";
+
+    // (9) 志望動機欄に生成文章を代入し、プレビューを更新
     motivationInput.value = generatedText;
-
-    // 既存のプレビュー同期処理を発火させるため、人工的にinputイベントを起こす
-    motivationInput.dispatchEvent(new Event("input"));
-
+    motivationInput.dispatchEvent(new Event("input")); // プレビュー更新
   } catch (error) {
     console.error(error);
     alert("エラーが発生しました: " + error.message);

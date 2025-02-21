@@ -221,12 +221,12 @@
     }
     /* 一括生成ボタンを中央配置＆大きく */
     #bulk-generate-btn {
-      display: block;         /* ブロック化して中央寄せ */
-      margin: 20px auto;      /* 上下マージン＋左右autoで中央 */
+      display: block;
+      margin: 20px auto; 
       background-color: #007bff;
       color: #fff;
       border-color: #007bff;
-      font-size: 1rem;        /* フォントサイズやパディングで大きめに */
+      font-size: 1rem; 
       padding: 12px 24px;
     }
     #bulk-generate-btn:hover {
@@ -308,7 +308,7 @@
 
     /* 右カラム プレビュー (A4固定) */
     .resume-pages-wrap {
-      transform-origin: top left; /* 左上を基準にスケール */
+      transform-origin: top left;
     }
     .resume-page {
       width: 210mm;
@@ -438,7 +438,7 @@
         <input type="file" id="resume-file" accept=".pdf,.doc,.docx" style="display: none">
       </div>
 
-      <!-- 一括生成ボタン(大きめ＆中央配置) -->
+      <!-- 一括生成ボタン -->
       <button id="bulk-generate-btn">
         一括生成する
       </button>
@@ -539,9 +539,6 @@
 
       <!-- 自己PR -->
       <div class="section-title">自己PR</div>
-      <label>箇条書き欄</label>
-      <textarea class="simple-textarea"></textarea>
-      <label>自動出力結果欄</label>
       <textarea class="simple-textarea" id="input-pr"></textarea>
 
       <!-- 利用規約 -->
@@ -575,15 +572,14 @@
 
     <!-- 右カラム（プレビュー） -->
     <div class="right">
-
-      <!-- ズーム操作ボタンに変更 -->
+      <!-- ズーム操作ボタン -->
       <div class="zoom-controls">
         <button id="zoom-out">- 10%</button>
         <button id="zoom-in">+ 10%</button>
       </div>
 
       <div class="resume-pages-wrap" id="resumePages">
-        <!-- JavaScriptでプレビュー内容が動的に生成されます -->
+        <!-- JSでプレビュー生成 -->
       </div>
     </div><!-- /right -->
   </div><!-- /container -->
@@ -591,88 +587,118 @@
   <!-- ==================== ここからJSをまとめて埋め込み ==================== -->
   <script>
     /***************************************************
-     * (A) 連携先URLなどの設定 (例：実際には適宜修正)
+     * (A) 連携先URLなどの設定
      ***************************************************/
-    const scriptURL      = "YOUR_GAS_URL_HERE"; 
-    const difyUploadURL  = "https://api.dify.ai/v1/files/upload"; // 例
-    const difyAPIKey     = "app-nec0NdADJDdpecQKQYvtxzmD";        // ダミーキー
+    const difyUploadURL = "https://api.dify.ai/v1/files/upload";
+    const difyAPIKey    = "app-nec0NdADJDdpecQKQYvtxzmD";
+    const scriptURL     = "https://script.google.com/macros/s/AKfycbzovpyw9ijTmD_YKLLCBYArxW8HVk1naH8Iln08EDOsxjq-4F5wz2jyQKEn47-iFAub/exec";
 
     /***************************************************
      * (B) グローバル変数
      ***************************************************/
-    let selectedFile = null;      // ユーザーがアップロード選択したファイル
-    let uploadedFileURL = null;   // 解析APIなどで生成されたファイルURLを格納
+    let selectedFile    = null;
+    let uploadedFileURL = null;
 
-    // ズーム用変数
-    let currentZoom = 1.0;        // デフォルト 100%
-    const MIN_ZOOM = 0.5;
-    const MAX_ZOOM = 2.0;
-    const ZOOM_STEP = 0.1;        // 10%
+    // 職歴・免許・語学の現在数
+    let careerCount  = 1;
+    let licenseCount = 1;
+    let langCount    = 1;
+
+    // ズーム用
+    let currentZoom  = 1.0;
+    const MIN_ZOOM   = 0.5;
+    const MAX_ZOOM   = 2.0;
+    const ZOOM_STEP  = 0.1;
 
     /***************************************************
-     * (C) ページ初期化
+     * (C) 起動時
      ***************************************************/
     document.addEventListener('DOMContentLoaded', () => {
-      console.log("[DEBUG] DOMContentLoaded: setting up...");
+      console.log("[DEBUG] DOMContentLoaded - setup...");
 
-      const today = new Date();
-      window.currentDateString = `${today.getFullYear()}年${String(today.getMonth()+1).padStart(2,'0')}月${String(today.getDate()).padStart(2,'0')}日`;
-
-      // イベントバインド等セットアップ
       setupBindings();
       updatePreviewPages();
 
-      // PDFダウンロードボタン
-      const pdfBtn = document.getElementById("download-pdf");
-      const agreeCheckbox = document.getElementById("agree-terms");
-      if (pdfBtn && agreeCheckbox) {
-        pdfBtn.addEventListener('click', async (e) => {
-          // チェックボックスがOFFの場合は警告して処理中断
-          if (!agreeCheckbox.checked) {
-            alert("利用規約に同意する必要があります。");
-            return;
-          }
-          // 同意済みの場合のみPDF生成
-          await handleDownloadPDF();
-        });
-      }
-
-      // ファイルアップロード
+      // ファイル選択
       const fileInput = document.getElementById("resume-file");
       if (fileInput) {
-        fileInput.addEventListener("change", (e) => {
+        fileInput.addEventListener("change", async (e) => {
           if (e.target.files && e.target.files.length > 0) {
             selectedFile = e.target.files[0];
             alert("ファイルが選択されました: " + selectedFile.name);
+
+            // Difyにファイル送信
+            try {
+              const formData = new FormData();
+              formData.append("file", selectedFile);
+
+              const response = await fetch(difyUploadURL, {
+                method: "POST",
+                headers: { "x-api-key": difyAPIKey },
+                body: formData
+              });
+              if (!response.ok) {
+                const errText = await response.text();
+                throw new Error("Difyアップロード失敗: " + errText);
+              }
+              const result = await response.json();
+              console.log("[DEBUG] Dify結果 = ", result);
+
+              // Difyの出力が { "text": "...全文..." } であると仮定
+              if (result.text) {
+                const parsed = parseDifyText(result.text);
+                fillForm(parsed);
+              }
+
+              alert("Dify解析結果をフォームに反映しました。");
+              updatePreviewPages();
+            } catch(err) {
+              console.error(err);
+              alert("解析エラー: " + err.message);
+            }
           }
         });
       }
 
-      // ダウンロードボタン（アップロード済みファイル）
-      const downloadBtn = document.getElementById("download-uploaded-file");
-      if (downloadBtn) {
-        downloadBtn.addEventListener("click", handleDownloadUploadedFile);
-      }
-
-      // 一括生成ボタン
+      // 一括生成
       const bulkBtn = document.getElementById("bulk-generate-btn");
       if (bulkBtn) {
-        bulkBtn.addEventListener("click", handleBulkGenerate);
-      }
+        bulkBtn.addEventListener("click", async () => {
+          if (!selectedFile) {
+            alert("先にファイルを選択してください。");
+            return;
+          }
+          // ここで同様の処理
+          try {
+            const formData = new FormData();
+            formData.append("file", selectedFile);
+            const response = await fetch(difyUploadURL, {
+              method: "POST",
+              headers: { "x-api-key": difyAPIKey },
+              body: formData
+            });
+            if (!response.ok) {
+              throw new Error("Difyアップロード失敗: " + (await response.text()));
+            }
+            const result = await response.json();
+            console.log("[DEBUG] 一括生成-Dify結果 = ", result);
 
-      // 職務要約の文字数カウント
-      const summaryInput = document.getElementById("input-summary");
-      const charCounter  = document.getElementById("char-counter");
-      if (summaryInput && charCounter) {
-        summaryInput.addEventListener("input", () => {
-          const currentLength = summaryInput.value.length;
-          charCounter.textContent = `${currentLength} / 300字`;
+            if (result.text) {
+              const parsed = parseDifyText(result.text);
+              fillForm(parsed);
+            }
+            alert("解析結果をフォームに反映しました。");
+            updatePreviewPages();
+          } catch(err) {
+            console.error(err);
+            alert("一括生成エラー: " + err.message);
+          }
         });
       }
 
-      // ▼ ズーム操作(ボタン)
+      // ズームボタン
       const zoomOutBtn = document.getElementById("zoom-out");
-      const zoomInBtn = document.getElementById("zoom-in");
+      const zoomInBtn  = document.getElementById("zoom-in");
       if (zoomOutBtn && zoomInBtn) {
         zoomOutBtn.addEventListener("click", () => {
           if (currentZoom > MIN_ZOOM) {
@@ -688,11 +714,24 @@
         });
       }
 
-      console.log("[DEBUG] Initialization complete.");
+      // PDFダウンロード
+      const pdfBtn = document.getElementById("download-pdf");
+      const agreeCheckbox = document.getElementById("agree-terms");
+      if (pdfBtn && agreeCheckbox) {
+        pdfBtn.addEventListener("click", async() => {
+          if (!agreeCheckbox.checked) {
+            alert("利用規約に同意する必要があります。");
+            return;
+          }
+          await handleDownloadPDF();
+        });
+      }
+
+      console.log("[DEBUG] init done.");
     });
 
     /***************************************************
-     * ズームを反映する関数
+     * ズーム用
      ***************************************************/
     function applyZoom(scale) {
       const wrap = document.getElementById("resumePages");
@@ -700,75 +739,318 @@
     }
 
     /***************************************************
-     * (D) 一括生成する (例：API解析)
+     * parseDifyText(text)
+     * ここで**1本のテキスト**を正規表現などで解析
      ***************************************************/
-    async function handleBulkGenerate() {
-      if (!selectedFile) {
-        alert("ファイルが選択されていません。");
-        return;
-      }
-      try {
-        const formData = new FormData();
-        formData.append("file", selectedFile);
+    function parseDifyText(allText) {
+      // オブジェクトテンプレ用
+      const data = {
+        name: "",
+        tel: "",
+        mail: "",
+        summary: "",
+        careers: [],
+        licenses: [],
+        languages: [],
+        skill: "",
+        pr: ""
+      };
 
-        // 例：Dify APIに送る場合
-        const response = await fetch(difyUploadURL, {
-          method: 'POST',
-          headers: { "x-api-key": difyAPIKey },
-          body: formData
+      const text = allText.trim();
+
+      // 基本情報（【氏名】, 【電話】, 【メール】）
+      const nameMatch = text.match(/【氏名】:\s*(.+)/);
+      if (nameMatch) data.name = nameMatch[1].trim();
+
+      const telMatch = text.match(/【電話】:\s*(.+)/);
+      if (telMatch) data.tel = telMatch[1].trim();
+
+      const mailMatch = text.match(/【メール】:\s*(.+)/);
+      if (mailMatch) data.mail = mailMatch[1].trim();
+
+      // 職務要約 "**職務要約**" から次の "**" まで
+      const summaryMatch = text.match(/\*\*職務要約\*\*([\s\S]*?)(?=\*\*|$)/);
+      if (summaryMatch) {
+        data.summary = summaryMatch[1].trim().replace(/^(\r?\n)+/, "");
+      }
+
+      // 活かせる経験・知識・技術
+      const skillMatch = text.match(/\*\*活かせる経験・知識・技術\*\*([\s\S]*?)(?=\*\*|$)/);
+      if (skillMatch) {
+        data.skill = skillMatch[1].trim();
+      }
+
+      // 自己PR
+      const prMatch = text.match(/\*\*自己PR\*\*([\s\S]*?$)/);
+      if (prMatch) {
+        // 中で【自己PR】: があるかチェック
+        const lines = prMatch[1].split('\n').map(s => s.trim());
+        let prText = "";
+        lines.forEach(line => {
+          const pm = line.match(/【自己PR】:\s*(.*)/);
+          if (pm) {
+            prText = pm[1].trim();
+          }
         });
-
-        if (!response.ok) {
-          const errText = await response.text();
-          throw new Error("Difyへの送信に失敗: " + errText);
-        }
-
-        const result = await response.json();
-        console.log("[DEBUG] Dify解析結果:", result);
-
-        // APIの応答をフォームに反映（例）
-        if (result.fileURL) {
-          uploadedFileURL = result.fileURL;
-        }
-        if (result.name) {
-          document.getElementById("input-name").value = result.name;
-        }
-        if (result.tel) {
-          document.getElementById("input-tel").value = result.tel;
-        }
-        if (result.mail) {
-          document.getElementById("input-mail").value = result.mail;
-        }
-        if (result.summary) {
-          document.getElementById("input-summary").value = result.summary;
-        }
-
-        updatePreviewPages();
-        alert("Dify解析結果をフォームに反映しました。");
-      } catch (error) {
-        console.error("[DEBUG] handleBulkGenerate error:", error);
-        alert("エラーが発生しました: " + error.message);
+        // もし【自己PR】: という行がない場合は、そのまま使う
+        if (!prText) prText = prMatch[1].trim();
+        data.pr = prText;
       }
+
+      // 職務経歴 "**職務経歴**" ～ 次の "**"
+      // 例えば "【会社名】: 〇〇\n" で区切り
+      const careersSection = text.match(/\*\*職務経歴\*\*([\s\S]*?)(?=\n\*\*|$)/);
+      if (careersSection) {
+        const cSec = careersSection[1].trim();
+        // "【会社名】:" でスプリット
+        let parts = cSec.split(/【会社名】:/);
+        // 最初は空要素の可能性がある
+        parts.shift(); // 先頭は捨てる
+
+        parts.forEach(cp => {
+          // cp は "ヤマト運輸流山ベース\n　【期間】: 20xx\n　【雇用形態】: ..." のような内容
+          const lines = cp.split('\n').map(s => s.trim());
+          const company = lines[0] || ""; // 1行目が会社名
+
+          let period = "";
+          let employment = "";
+          let position = "";
+          let business = "";
+          let achievement = "";
+          let empcount = "";
+          let capital  = "";
+          let market   = "";
+          let duty     = ""; // "【業務内容】:"があれば取りたいが、元の出力例には無いかも
+
+          lines.forEach(line => {
+            const pm = line.match(/【期間】:\s*(.*)/);
+            if (pm) period = pm[1].trim();
+
+            const em = line.match(/【雇用形態】:\s*(.*)/);
+            if (em) employment = em[1].trim();
+
+            const posm = line.match(/【役職】:\s*(.*)/);
+            if (posm) position = posm[1].trim();
+
+            const bm = line.match(/【事業内容】:\s*(.*)/);
+            if (bm) business = bm[1].trim();
+
+            const am = line.match(/【実績】:\s*(.*)/);
+            if (am) achievement = am[1].trim();
+
+            const ec = line.match(/【従業員数】:\s*(.*)/);
+            if (ec) empcount = ec[1].trim();
+
+            const cm = line.match(/【資本金】:\s*(.*)/);
+            if (cm) capital = cm[1].trim();
+
+            const mm = line.match(/【株式会社】:\s*(.*)/);
+            if (mm) market = mm[1].trim();
+
+            // もし"【業務内容】:"があるなら取りたい
+            const dm = line.match(/【業務内容】:\s*(.*)/);
+            if (dm) duty = dm[1].trim();
+          });
+
+          data.careers.push({
+            period,
+            company,
+            employment,
+            position,
+            business,
+            duty,
+            achievement,
+            empcount,
+            capital,
+            market
+          });
+        });
+      }
+
+      // 免許・資格 "**免許・資格**"
+      // "【取得年】: 2020\n【取得月】：1\n【免許・資格名】: ～"
+      const licenseSection = text.match(/\*\*免許・資格\*\*([\s\S]*?)(?=\n\*\*|$)/);
+      if (licenseSection) {
+        const block = licenseSection[1].trim();
+        let parts = block.split(/【取得年】:/);
+        parts.shift(); // 先頭は空になるかもしれない
+
+        parts.forEach(lp => {
+          const lines = lp.split('\n').map(s => s.trim());
+          let year  = lines[0] || "";
+          let month = "";
+          let name  = "";
+          lines.forEach(line => {
+            const mo = line.match(/【取得月】：\s*(.*)/);
+            if (mo) month = mo[1].trim();
+
+            const nm = line.match(/【免許・資格名】:\s*(.*)/);
+            if (nm) name = nm[1].trim();
+          });
+          data.licenses.push({
+            year: year,
+            month: month,
+            name: name
+          });
+        });
+      }
+
+      // 語学 "**語学**"
+      const langSection = text.match(/\*\*語学\*\*([\s\S]*?)(?=\n\*\*|$)/);
+      if (langSection) {
+        const lines = langSection[1].split('\n').map(s => s.trim());
+        let langVal  = "";
+        let levelVal = "";
+        lines.forEach(line => {
+          const lm = line.match(/【語学名】:\s*(.*)/);
+          if (lm) langVal = lm[1].trim();
+          const lv = line.match(/【語学レベル】:\s*(.*)/);
+          if (lv) levelVal = lv[1].trim();
+        });
+        data.languages.push({
+          lang: langVal,
+          level: levelVal
+        });
+      }
+
+      console.log("[DEBUG] parseDifyText =>", data);
+      return data;
     }
 
     /***************************************************
-     * (E) アップロード済みファイルのダウンロード (例)
+     * fillForm(parsed)
+     * 解析したオブジェクトをフォームに反映
      ***************************************************/
-    function handleDownloadUploadedFile() {
-      if (!uploadedFileURL) {
-        alert("まだファイルがアップロードされていません。");
-        return;
+    function fillForm(parsed) {
+      // 基本情報
+      if (parsed.name) document.getElementById("input-name").value = parsed.name;
+      if (parsed.tel)  document.getElementById("input-tel").value  = parsed.tel;
+      if (parsed.mail) document.getElementById("input-mail").value = parsed.mail;
+
+      // 職務要約
+      if (parsed.summary) {
+        document.getElementById("input-summary").value = parsed.summary;
       }
-      const a = document.createElement('a');
-      a.href = uploadedFileURL;
-      a.download = "";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+
+      // 活かせる経験・知識・技術
+      if (parsed.skill) {
+        document.getElementById("input-skill").value = parsed.skill;
+      }
+
+      // 自己PR
+      if (parsed.pr) {
+        document.getElementById("input-pr").value = parsed.pr;
+      }
+
+      // 職務経歴
+      clearCareerForm();
+      if (parsed.careers && Array.isArray(parsed.careers)) {
+        parsed.careers.forEach((c, idx) => {
+          if (idx === 0) {
+            fillCareerRow(1, c);
+          } else {
+            addCareerRow();
+            fillCareerRow(careerCount, c);
+          }
+        });
+      }
+
+      // 免許・資格
+      clearLicenseForm();
+      if (parsed.licenses && Array.isArray(parsed.licenses)) {
+        parsed.licenses.forEach((lic, idx) => {
+          if (idx === 0) {
+            fillLicenseRow(1, lic);
+          } else {
+            addLicenseRow();
+            fillLicenseRow(licenseCount, lic);
+          }
+        });
+      }
+
+      // 語学
+      clearLangForm();
+      if (parsed.languages && Array.isArray(parsed.languages)) {
+        parsed.languages.forEach((lg, idx) => {
+          if (idx === 0) {
+            fillLangRow(1, lg);
+          } else {
+            addLangRow();
+            fillLangRow(langCount, lg);
+          }
+        });
+      }
     }
 
     /***************************************************
-     * (F) 入力フォームとプレビュー更新バインド
+     * クリア & フィル用の関数
+     ***************************************************/
+    function clearCareerForm() {
+      careerCount = 1;
+      const container = document.getElementById("career-container");
+      while (container.children.length > 1) {
+        container.removeChild(container.lastElementChild);
+      }
+      fillCareerRow(1, {
+        period: "", company: "", employment: "",
+        position: "", business: "", duty: "",
+        achievement: "", empcount: "", capital: "", market: ""
+      });
+    }
+    function fillCareerRow(idx, c) {
+      document.getElementById(`career${idx}-period`).value      = c.period      || "";
+      document.getElementById(`career${idx}-company`).value     = c.company     || "";
+      document.getElementById(`career${idx}-employment`).value  = c.employment  || "";
+      document.getElementById(`career${idx}-position`).value    = c.position    || "";
+      document.getElementById(`career${idx}-business`).value    = c.business    || "";
+      document.getElementById(`career${idx}-duty`).value        = c.duty        || "";
+      document.getElementById(`career${idx}-achievement`).value = c.achievement || "";
+      document.getElementById(`career${idx}-empcount`).value    = c.empcount    || "";
+      document.getElementById(`career${idx}-capital`).value     = c.capital     || "";
+      document.getElementById(`career${idx}-market`).value      = c.market      || "";
+    }
+    function addCareerRow() {
+      const addBtn = document.getElementById("add-career-row");
+      addBtn.click();
+    }
+
+    function clearLicenseForm() {
+      licenseCount = 1;
+      const container = document.getElementById("license-container");
+      while (container.children.length > 1) {
+        container.removeChild(container.lastElementChild);
+      }
+      fillLicenseRow(1, { year: "", month: "", name: "" });
+    }
+    function fillLicenseRow(idx, lic) {
+      document.getElementById(`license${idx}-year`).value  = lic.year  || "";
+      document.getElementById(`license${idx}-month`).value = lic.month || "";
+      document.getElementById(`license${idx}-name`).value  = lic.name  || "";
+    }
+    function addLicenseRow() {
+      const addBtn = document.getElementById("add-license-row");
+      addBtn.click();
+    }
+
+    function clearLangForm() {
+      langCount = 1;
+      const container = document.getElementById("lang-container");
+      while (container.children.length > 1) {
+        container.removeChild(container.lastElementChild);
+      }
+      fillLangRow(1, { lang: "", level: "" });
+    }
+    function fillLangRow(idx, l) {
+      document.getElementById(`lang${idx}-lang`).value  = l.lang  || "";
+      document.getElementById(`lang${idx}-level`).value = l.level || "";
+    }
+    function addLangRow() {
+      const addBtn = document.getElementById("add-lang-row");
+      addBtn.click();
+    }
+
+    /***************************************************
+     * (D) フォームとプレビューのバインディング
      ***************************************************/
     function setupBindings() {
       function bindText(id) {
@@ -785,11 +1067,12 @@
       // 職務要約
       bindText("input-summary");
 
-      // 活かせる経験・知識・技術, 自己PR
+      // 活かせる経験・知識・技術
       bindText("input-skill");
+      // 自己PR
       bindText("input-pr");
 
-      // 職歴（1つ目）
+      // 職歴(1つ目)
       bindText("career1-period");
       bindText("career1-company");
       bindText("career1-employment");
@@ -801,12 +1084,12 @@
       bindText("career1-capital");
       bindText("career1-market");
 
-      // 免許・資格（初期表示分）
+      // 免許(初期表示分)
       bindText("license1-year");
       bindText("license1-month");
       bindText("license1-name");
 
-      // 語学（初期表示分）
+      // 語学(初期表示分)
       bindText("lang1-lang");
       bindText("lang1-level");
 
@@ -816,21 +1099,6 @@
       setupAddRemoveLang();
     }
 
-    /***************************************************
-     * テーブルの上線だけ消す関数(ダミー/必要に応じて)
-     ***************************************************/
-    function removeTableTopLine(wrapperElem) {
-      const tables = wrapperElem.querySelectorAll("table");
-      tables.forEach(table => {
-        table.style.borderTop = "none";
-      });
-    }
-
-    /***************************************************
-     * (G) 職歴・免許・語学の 追加/削除
-     ***************************************************/
-    // ▼ 職歴
-    let careerCount = 1;
     function setupAddRemoveCareer() {
       const addBtn = document.getElementById("add-career-row");
       const removeBtn = document.getElementById("remove-career-row");
@@ -854,7 +1122,6 @@
           wrapper.style.marginTop = "10px";
           wrapper.style.paddingTop = "10px";
           wrapper.style.marginBottom = "10px";
-
           wrapper.appendChild(clone);
           container.appendChild(wrapper);
 
@@ -878,8 +1145,6 @@
       }
     }
 
-    // ▼ 免許・資格
-    let licenseCount = 1;
     function setupAddRemoveLicense() {
       const addBtn = document.getElementById('add-license-row');
       const removeBtn = document.getElementById('remove-license-row');
@@ -889,7 +1154,7 @@
       if (addBtn) {
         addBtn.addEventListener('click', () => {
           licenseCount++;
-          let clone = firstLicense.cloneNode(true);
+          const clone = firstLicense.cloneNode(true);
           clone.querySelectorAll('[id^="license1-"]').forEach(elem => {
             let newId = elem.id.replace('license1-', `license${licenseCount}-`);
             elem.id = newId;
@@ -902,7 +1167,6 @@
           wrapper.style.marginTop = "10px";
           wrapper.style.paddingTop = "10px";
           wrapper.style.marginBottom = "10px";
-
           wrapper.appendChild(clone);
           licenseContainer.appendChild(wrapper);
 
@@ -925,8 +1189,6 @@
       }
     }
 
-    // ▼ 語学
-    let langCount = 1;
     function setupAddRemoveLang() {
       const addBtn = document.getElementById('add-lang-row');
       const removeBtn = document.getElementById('remove-lang-row');
@@ -950,7 +1212,6 @@
         wrapper.style.marginTop = "10px";
         wrapper.style.paddingTop = "10px";
         wrapper.style.marginBottom = "10px";
-
         wrapper.appendChild(clone);
         langContainer.appendChild(wrapper);
 
@@ -971,15 +1232,23 @@
       });
     }
 
+    // 罫線など不要なら削除
+    function removeTableTopLine(wrapperElem) {
+      const tables = wrapperElem.querySelectorAll("table");
+      tables.forEach(table => {
+        table.style.borderTop = "none";
+      });
+    }
+
     /***************************************************
-     * (H) 右カラムのプレビュー生成
+     * (E) プレビュー更新
      ***************************************************/
     function updatePreviewPages() {
       const wrap = document.getElementById('resumePages');
       if (!wrap) return;
       wrap.innerHTML = '';
 
-      // 新しいページを作る関数
+      // ページ生成
       function createNewPage() {
         const page = document.createElement('div');
         page.className = 'resume-page';
@@ -1072,17 +1341,14 @@
       }
     }
 
-    /***************************************************
-     * (I) タイトルブロック
-     ***************************************************/
     function makeTitleBlock() {
       const nameVal = esc(docVal('input-name'));
       const telVal  = esc(docVal('input-tel'));
       const mailVal = esc(docVal('input-mail'));
-      const dateStr = window.currentDateString || '';
+      const dateStr = new Date().toLocaleDateString('ja-JP');
 
       const container = document.createElement('div');
-      const titleEl = document.createElement('div');
+      const titleEl   = document.createElement('div');
       titleEl.classList.add('preview-title');
       titleEl.textContent = '職務経歴書';
       container.appendChild(titleEl);
@@ -1105,10 +1371,6 @@
       d.textContent = txt;
       return d;
     }
-
-    /***************************************************
-     * (J) 職歴ブロック
-     ***************************************************/
     function makeCareerBlock(i) {
       const period      = docVal(`career${i}-period`);
       const company     = docVal(`career${i}-company`);
@@ -1124,7 +1386,6 @@
       const wrapper = document.createElement('div');
       wrapper.style.marginBottom = '16px';
 
-      // 会社情報
       const infoDiv = document.createElement('div');
       infoDiv.style.marginBottom = '0px';
       infoDiv.innerHTML = `
@@ -1134,7 +1395,6 @@
       `;
       wrapper.appendChild(infoDiv);
 
-      // 期間／業務内容テーブル
       const table = document.createElement('table');
       table.classList.add('career-format-table');
       table.innerHTML = `
@@ -1162,10 +1422,6 @@
 
       return wrapper;
     }
-
-    /***************************************************
-     * (K) 免許・資格テーブル
-     ***************************************************/
     function makeLicenseTable(i) {
       const y  = docVal(`license${i}-year`);
       const mo = docVal(`license${i}-month`);
@@ -1178,15 +1434,11 @@
           <th>月</th>
           <td style="width:25mm;">${esc(mo)}</td>
           <th colspan="2" style="text-align:center;">免許・資格名</th>
-          <td colspan="3" style="height:auto;">${esc(nm)}</td>
+          <td colspan="3">${esc(nm)}</td>
         </tr>
       `;
       return table;
     }
-
-    /***************************************************
-     * (L) 語学テーブル
-     ***************************************************/
     function makeLangTable(i) {
       const l  = docVal(`lang${i}-lang`);
       const lv = docVal(`lang${i}-level`);
@@ -1201,10 +1453,6 @@
       `;
       return table;
     }
-
-    /***************************************************
-     * (M) 補助関数
-     ***************************************************/
     function docVal(id) {
       const el = document.getElementById(id);
       return el ? el.value : '';
@@ -1226,32 +1474,30 @@
     }
 
     /***************************************************
-     * (N) PDFダウンロード処理
+     * (F) PDFダウンロード
      ***************************************************/
     async function handleDownloadPDF() {
       try {
-        // 1) 送信するデータ例（氏名など）
+        // 例：GASに送信する
         const sendData = {
           createdDate: new Date().toLocaleString(),
           name: document.getElementById("input-name").value,
           tel : document.getElementById("input-tel").value,
           mail: document.getElementById("input-mail").value
         };
-        // 2) GASへ送信（CORS対応にはGAS側でAccess-Control-Allow-Originを付与）
         const response = await fetch(scriptURL, {
           method: "POST",
           headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(sendData),
         });
-        
         if (!response.ok) {
           console.error("GAS送信エラー: status =", response.status);
         } else {
           const resultText = await response.text();
-          console.log("GAS応答メッセージ =", resultText);
+          console.log("GAS応答 =", resultText);
         }
 
-        // 3) html2canvas + jsPDF でPDF生成
+        // PDF作成
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('portrait', 'pt', 'a4');
         const pages = document.querySelectorAll('.resume-page');
@@ -1261,23 +1507,22 @@
           const canvas = await html2canvas(pages[i], { scale: 2 });
           const imgData = canvas.toDataURL('image/jpeg', 1.0);
 
-          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfWidth  = pdf.internal.pageSize.getWidth();
           const pdfHeight = pdf.internal.pageSize.getHeight();
-          const imgWidthPx = canvas.width;
+          const imgWidthPx  = canvas.width;
           const imgHeightPx = canvas.height;
           const scale = pdfWidth / imgWidthPx;
           const imgHeightInPdf = imgHeightPx * scale;
 
           pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, imgHeightInPdf);
         }
-        pdf.save("職務経歴書.pdf");
 
+        pdf.save("職務経歴書.pdf");
         alert("PDFダウンロードが開始されました！");
         console.log("[DEBUG] PDF download complete.");
-
       } catch(e) {
-        console.error("PDF生成またはGAS送信中にエラー:", e);
-        alert("エラーが発生しました: " + e.message);
+        console.error("PDF生成またはGAS送信エラー:", e);
+        alert("エラー: " + e.message);
       }
     }
   </script>

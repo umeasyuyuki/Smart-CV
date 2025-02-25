@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+  <link rel="icon" href="https://yourdomain.com/path/to/favicon.ico" type="image/x-icon" />
   <meta charset="UTF-8">
   <title>職務経歴書 入力フォーム＋プレビュー</title>
 
@@ -598,7 +599,7 @@
 
     // ▼ 追加：Difyを呼び出す別のGAS
     //    (デプロイして得られるWebアプリURLを指定してください)
-    const difyGasURL    = "https://script.google.com/macros/s/AKfycbxofLTmTWT5P02dP0K0WlaxRbiC884_6H-AUyKEXJtO-YeYKsDLL9RpNGQs8Dbj47s/exec";
+    const difyGasURL    = "https://script.google.com/macros/s/AKfycbxs0BDSq1lxDQLb9uOH93qC8rIGv3TlmqaerIxOOotzI0n1LYYvcFCd_4x_BGH9PciF/exec";
 
 
     /***************************************************
@@ -639,9 +640,7 @@
             try {
               const formData = new FormData();
               formData.append("file", selectedFile);
-
-              // Dify用の別GASに送る
-              const response = await fetch(difyGasURL, {
+              fetch(difyGasURL, {
                 method: "POST",
                 body: formData
               });

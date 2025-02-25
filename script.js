@@ -212,14 +212,13 @@ function generateResumeTemplate() {
 /************************************************************
  * 3) ページDOMを追加して表示
  ************************************************************/
-// コンテナ
 const pagesContainer = document.getElementById("resume-pages");
 
 /** 1ページ目を自動生成 */
 function createNewPageDOM() {
   const pageEl = document.createElement("div");
   pageEl.classList.add("resume-page");
-  pageEl.innerHTML = generateResumeTemplate(); // 修正：文字列としてHTMLを流し込む
+  pageEl.innerHTML = generateResumeTemplate(); // 文字列としてHTMLを流し込む
   pagesContainer.appendChild(pageEl);
   return pageEl;
 }
@@ -236,19 +235,20 @@ function setTodayDate() {
   const m = now.getMonth() + 1;
   const d = now.getDate();
   const reiwa = y - 2018; // 2019年=令和元年
-  
+
   // テンプレートリテラルで文字列を作成
   const todayStr = `令和 ${reiwa} 年 ${m} 月 ${d} 日現在`;
-  
+
   const todayDateEl = document.getElementById("preview-today-date");
-  todayDateEl.textContent = todayStr;
+  if (todayDateEl) {
+    todayDateEl.textContent = todayStr;
+  }
 }
 setTodayDate();
 
 /************************************************************
  * 5) フォーム入力とプレビューの同期
  ************************************************************/
-// 汎用関数
 function bindTextSync(inputSel, previewSel) {
   const inputEl = document.querySelector(inputSel);
   const prevEl = document.querySelector(previewSel);
@@ -262,7 +262,7 @@ function bindTextSync(inputSel, previewSel) {
   sync(); // 初期反映
 }
 
-// 名前・住所など
+// ---- 各テキスト欄をプレビューに同期 ----
 bindTextSync("#input-name", "#preview-name");
 bindTextSync("#input-furigana", "#preview-furigana");
 bindTextSync("#input-postal-code", "#preview-postal-code");
@@ -279,7 +279,7 @@ bindTextSync("#input-motivation", "#preview-motivation");
 bindTextSync("#input-pr", "#preview-pr");
 bindTextSync("#input-request", "#preview-request");
 
-// 生年月日（年・月・日）
+// ---- 生年月日（年・月・日）を同期 ----
 const birthYear = document.getElementById("birth-year");
 const birthMonth = document.getElementById("birth-month");
 const birthDay = document.getElementById("birth-day");
@@ -293,17 +293,17 @@ function syncBirth() {
   prevBirthDay.textContent = birthDay.value;
   splitPagesIfOverflow();
 }
-[birthYear, birthMonth, birthDay].forEach(el =>
+[birthYear, birthMonth, birthDay].forEach((el) =>
   el.addEventListener("input", syncBirth)
 );
 
-// 年齢
+// ---- 年齢を同期 ----
 bindTextSync("#age", "#preview-age");
 
-// 性別
+// ---- 性別を同期 ----
 bindTextSync("#gender", "#preview-gender");
 
-// 写真
+// ---- 写真を同期 ----
 const photoInput = document.getElementById("input-photo");
 const previewPhoto = document.getElementById("preview-photo-img");
 photoInput.addEventListener("change", () => {
@@ -321,7 +321,7 @@ photoInput.addEventListener("change", () => {
   reader.readAsDataURL(file);
 });
 
-// 生年月日selectに値を入れる
+// ---- 生年月日selectに値を入れる（初期化）----
 const yearNow = new Date().getFullYear();
 function populateYears(select) {
   for (let y = 1900; y <= yearNow; y++) {
@@ -388,7 +388,7 @@ function syncEduRow(leftYearEl, leftMonthEl, leftWorkEl, rowIndex) {
 }
 syncEduRow(defEduYear, defEduMonth, defEduWork, 1);
 
-// 年月選択肢を設定する関数
+// 学歴・職歴の年・月セレクトに値を入れる
 function populateYearMonth(selectYear, selectMonth) {
   for (let y = 1900; y <= yearNow; y++) {
     const opt = document.createElement("option");
@@ -405,7 +405,7 @@ function populateYearMonth(selectYear, selectMonth) {
 }
 populateYearMonth(defEduYear, defEduMonth);
 
-// 「＋ 追加する」ボタン
+// 「＋ 追加する」ボタン（学歴・職歴）
 document.getElementById("add-education-row").addEventListener("click", () => {
   if (currentEduRows >= maxEduRows) {
     alert("学歴・職歴は最大12行までです。");
@@ -426,31 +426,37 @@ document.getElementById("add-education-row").addEventListener("click", () => {
   `;
   eduContainer.appendChild(row);
 
-  // populate
   const newYear = row.querySelector(".edu-year");
   const newMonth = row.querySelector(".edu-month");
   const newWork = row.querySelector(".edu-work");
   populateYearMonth(newYear, newMonth);
 
-  // 同期
   syncEduRow(newYear, newMonth, newWork, rowIndex);
 });
 
-// 「－ 削除」ボタン
-document.getElementById("remove-education-last").addEventListener("click", () => {
-  if (currentEduRows > 1) {
-    const rows = eduContainer.querySelectorAll(".row-container");
-    eduContainer.removeChild(rows[rows.length - 1]);
+// 「－ 削除」ボタン（学歴・職歴）
+document
+  .getElementById("remove-education-last")
+  .addEventListener("click", () => {
+    if (currentEduRows > 1) {
+      const rows = eduContainer.querySelectorAll(".row-container");
+      eduContainer.removeChild(rows[rows.length - 1]);
 
-    // 右側プレビューの該当行を空に
-    document.getElementById(`edu-preview-year-${currentEduRows}`).textContent = "";
-    document.getElementById(`edu-preview-month-${currentEduRows}`).textContent = "";
-    document.getElementById(`edu-preview-work-${currentEduRows}`).textContent = "";
+      // 右側プレビューの該当行を空に
+      document.getElementById(
+        `edu-preview-year-${currentEduRows}`
+      ).textContent = "";
+      document.getElementById(
+        `edu-preview-month-${currentEduRows}`
+      ).textContent = "";
+      document.getElementById(
+        `edu-preview-work-${currentEduRows}`
+      ).textContent = "";
 
-    currentEduRows--;
-    splitPagesIfOverflow();
-  }
-});
+      currentEduRows--;
+      splitPagesIfOverflow();
+    }
+  });
 
 /************************************************************
  * 7) 免許・資格 (最大6行)
@@ -466,8 +472,12 @@ const defSkillHistory = skillContainer.querySelector(".skill-history");
 
 function syncSkillRow(yearEl, monthEl, histEl, rowIndex) {
   const previewYear = document.getElementById(`skill-preview-year-${rowIndex}`);
-  const previewMonth = document.getElementById(`skill-preview-month-${rowIndex}`);
-  const previewHistory = document.getElementById(`skill-preview-history-${rowIndex}`);
+  const previewMonth = document.getElementById(
+    `skill-preview-month-${rowIndex}`
+  );
+  const previewHistory = document.getElementById(
+    `skill-preview-history-${rowIndex}`
+  );
 
   function doSync() {
     previewYear.textContent = yearEl.value;
@@ -482,7 +492,7 @@ function syncSkillRow(yearEl, monthEl, histEl, rowIndex) {
 }
 syncSkillRow(defLicenseYear, defLicenseMonth, defSkillHistory, 1);
 
-// 年月選択肢
+// 年・月セレクトに値を入れる（免許・資格）
 function populateYearMonthSkill(selectYear, selectMonth) {
   for (let y = 1900; y <= yearNow; y++) {
     const opt = document.createElement("option");
@@ -499,7 +509,7 @@ function populateYearMonthSkill(selectYear, selectMonth) {
 }
 populateYearMonthSkill(defLicenseYear, defLicenseMonth);
 
-// 「＋ 追加する」ボタン
+// 「＋ 追加する」ボタン（免許・資格）
 document.getElementById("add-skill-row").addEventListener("click", () => {
   if (currentSkillRows >= maxSkillRows) {
     alert("免許・資格は最大6行までです。");
@@ -528,16 +538,22 @@ document.getElementById("add-skill-row").addEventListener("click", () => {
   syncSkillRow(yearEl, monthEl, histEl, rowIndex);
 });
 
-// 「－ 削除」ボタン
+// 「－ 削除」ボタン（免許・資格）
 document.getElementById("remove-skill-last").addEventListener("click", () => {
   if (currentSkillRows > 1) {
     const rows = skillContainer.querySelectorAll(".row-container");
     skillContainer.removeChild(rows[rows.length - 1]);
 
     // 右側プレビュー該当行を空に
-    document.getElementById(`skill-preview-year-${currentSkillRows}`).textContent = "";
-    document.getElementById(`skill-preview-month-${currentSkillRows}`).textContent = "";
-    document.getElementById(`skill-preview-history-${currentSkillRows}`).textContent = "";
+    document.getElementById(
+      `skill-preview-year-${currentSkillRows}`
+    ).textContent = "";
+    document.getElementById(
+      `skill-preview-month-${currentSkillRows}`
+    ).textContent = "";
+    document.getElementById(
+      `skill-preview-history-${currentSkillRows}`
+    ).textContent = "";
 
     currentSkillRows--;
     splitPagesIfOverflow();
@@ -583,10 +599,8 @@ function createBlankPage() {
 }
 
 function checkOverflow(pageEl, contentEl) {
-  // 縦方向にコンテンツがはみ出しているかどうか
   return contentEl.scrollHeight > pageEl.clientHeight;
 }
-
 
 /************************************************************
  * チェックボックスでPDF保存ボタンの状態を切り替える
@@ -597,33 +611,25 @@ const agreeTerms = document.getElementById("agree-terms");
 // チェック時/非チェック時にボタンのdisableと色を切り替える関数
 function updatePdfButtonState() {
   if (agreeTerms.checked) {
-    // チェックON → ボタンを有効化
     pdfSaveBtn.disabled = false;
     pdfSaveBtn.style.background = "#2ecc71"; // 通常の緑色
     pdfSaveBtn.style.cursor = "pointer";
   } else {
-    // チェックOFF → ボタンを無効化
     pdfSaveBtn.disabled = true;
     pdfSaveBtn.style.background = "#ccc";
     pdfSaveBtn.style.cursor = "not-allowed";
   }
 }
-
-// 同意するチェックが変化したら呼び出す
 agreeTerms.addEventListener("change", updatePdfButtonState);
-
-// ページ読み込み時にも初期状態を適用（念のため）
 updatePdfButtonState();
-
 
 /************************************************************
  * 9) PDF保存ボタン
  ************************************************************/
-document.getElementById("pdf-save-btn").addEventListener("click", async () => {
-  // もし同意が外れているのに何らかの理由でクリックできた場合、最終チェック
+pdfSaveBtn.addEventListener("click", async () => {
   if (!agreeTerms.checked) {
     alert("利用規約に同意する必要があります。");
-    return; // 保存処理へ進ませない
+    return;
   }
   splitPagesIfOverflow();
 
@@ -635,7 +641,7 @@ document.getElementById("pdf-save-btn").addEventListener("click", async () => {
     email: document.getElementById("input-email").value,
     gender: document.getElementById("gender").value,
     age: document.getElementById("age").value,
-    address: document.getElementById("input-address").value
+    address: document.getElementById("input-address").value,
   };
 
   // GASへ送信（不要な場合は削除）
@@ -653,7 +659,7 @@ document.getElementById("pdf-save-btn").addEventListener("click", async () => {
     alert("エラーが発生しました");
   }
 
-  // PDF生成
+  // PDF作成
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("portrait", "pt", "a4");
   const pageElems = document.querySelectorAll(".resume-page");
@@ -679,91 +685,172 @@ document.getElementById("pdf-save-btn").addEventListener("click", async () => {
   pdf.save("履歴書.pdf");
 });
 
-
 /************************************************************
- * 志望動機自動生成ボタン
+ * 志望動機 (モーダル) の自動生成ロジック
  ************************************************************/
-
-// (1) 箇条書き入力欄とボタン、そして既存の志望動機欄を取得
+const openMotivationModalBtn = document.getElementById("open-motivation-modal");
+const closeMotivationModalBtn = document.getElementById(
+  "close-motivation-modal"
+);
+const motivationModalOverlay = document.getElementById(
+  "motivation-modal-overlay"
+);
 const bulletPointsInput = document.getElementById("motivation-bullet-points");
 const generateButton = document.getElementById("generate-motivation");
 const motivationInput = document.getElementById("input-motivation");
 
-const WORKFLOW_ID = "07d33ea3-4e66-4924-9953-aa333df723f5"; // 例: "12345678-abcd-efgh-ijkl-9876543210mn"
-const DIFy_API_KEY = "Bearer app-9RoCGLstEdkBeg591WYtlLu3"; // 例: "Bearer app-XXXXXX"
+// モーダル開閉
+openMotivationModalBtn.addEventListener("click", () => {
+  motivationModalOverlay.style.display = "flex";
+});
+closeMotivationModalBtn.addEventListener("click", () => {
+  motivationModalOverlay.style.display = "none";
+});
 
-// (2) 自動生成ボタン押下時の処理
+// 志望動機用ワークフローID・APIキー（例）
+const MOTIVATION_WORKFLOW_ID = "07d33ea3-4e66-4924-9953-aa333df723f5";
+const MOTIVATION_API_KEY = "Bearer app-9RoCGLstEdkBeg591WYtlLu3";
+
 generateButton.addEventListener("click", async () => {
-  // 箇条書き入力欄の内容
   const bulletPoints = bulletPointsInput.value.trim();
-
   if (!bulletPoints) {
     alert("箇条書きの内容を入力してください。");
     return;
   }
 
+  // スピナーを付けて生成中状態に
+  generateButton.disabled = true;
+  generateButton.textContent = "生成中...";
+  const spinner = document.createElement("span");
+  spinner.classList.add("spinner");
+  generateButton.appendChild(spinner);
+
   try {
-    // (4) Dify APIに送るリクエストボディを作成
-    // ※ "text" や "prompt" 等、inputs のフィールド名はDifyのワークフロー設定に合わせて変更
     const requestBody = {
-      workflow_id: WORKFLOW_ID,
-      inputs: {
-        text: bulletPoints
-      },
-      user: "guest_user" // 必要に応じてユーザーIDなどを入れる
+      workflow_id: MOTIVATION_WORKFLOW_ID,
+      inputs: { text: bulletPoints },
+      user: "guest_user",
     };
 
-    // (5) DifyのAPIにリクエストを送る
     const response = await fetch("https://api.dify.ai/v1/workflows/run", {
       method: "POST",
-      mode: "cors", // CORS対策で追加(必要なら)
+      mode: "cors",
       headers: {
-       "Content-Type": "application/json",
-       "Authorization": "Bearer app-9RoCGLstEdkBeg591WYtlLu3"
-       "Authorization": DIFy_API_KEY
+        "Content-Type": "application/json",
+        Authorization: MOTIVATION_API_KEY,
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
     });
 
-    // (6) レスポンスのステータスをチェック
     if (!response.ok) {
-      // 400, 401, 500等の場合はエラーをthrow
       const errorData = await response.json();
       throw new Error(
-        `Dify APIエラー: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`
+        `Dify APIエラー: ${response.status} ${
+          response.statusText
+        } - ${JSON.stringify(errorData)}`
       );
     }
 
-    // (7) Difyからのレスポンスを取得
     const data = await response.json();
-    console.log("Difyレスポンス:", data);
+    console.log("志望動機レスポンス:", data);
+    const generatedText = data?.data?.outputs?.text || "生成テキストなし";
 
-    // (8) data.result や data.outputs など、
-    //     ワークフローの設定によって文章が格納されるキーが異なる
-    //     下記は例: "data.result" に文章が入っているケース
-    const generatedText = data.result || data.outputs || "生成テキストなし";
-
-    // (9) 志望動機欄に生成文章を代入し、プレビューを更新
+    // テキストエリアに反映
     motivationInput.value = generatedText;
-    motivationInput.dispatchEvent(new Event("input")); // プレビュー更新
+    // プレビュー更新
+    motivationInput.dispatchEvent(new Event("input"));
+
+    alert("志望動機を自動生成しました。");
   } catch (error) {
     console.error(error);
-    alert("エラーが発生しました: " + error.message);
+    alert("エラーが発生しました(志望動機): " + error.message);
+  } finally {
+    // スピナー解除
+    generateButton.removeChild(spinner);
+    generateButton.disabled = false;
+    generateButton.textContent = "志望動機を自動生成";
   }
 });
 
-
-
 /************************************************************
- * 10) 「一括生成する」ボタン
+ * 自己PR (モーダル) の自動生成ロジック
  ************************************************************/
-document.getElementById("bulk-generate-btn").addEventListener("click", () => {
-  const file = document.getElementById("resume-file").files[0];
-  const additional = document.getElementById("additional-info").value;
-  alert(
-    "『一括生成する』が押されました。ファイル=" +
-      file +
-      ", 情報=" +
-      additional
-  );
+const openPrModalBtn = document.getElementById("open-pr-modal");
+const closePrModalBtn = document.getElementById("close-pr-modal");
+const prModalOverlay = document.getElementById("pr-modal-overlay");
+const prBulletPointsInput = document.getElementById("pr-bullet-points");
+const generatePrButton = document.getElementById("generate-pr");
+const prInput = document.getElementById("input-pr");
+
+// モーダル開閉
+openPrModalBtn.addEventListener("click", () => {
+  prModalOverlay.style.display = "flex";
+});
+closePrModalBtn.addEventListener("click", () => {
+  prModalOverlay.style.display = "none";
+});
+
+// 自己PR用ワークフローID・APIキー（例）
+const PR_WORKFLOW_ID = "7a85b2a7-f6ea-4e9a-a314-d1cd429dd5dd";
+const PR_API_KEY = "Bearer app-VLBnOuNkP29lZj7ge6yVA5I6";
+
+generatePrButton.addEventListener("click", async () => {
+  const bulletPoints = prBulletPointsInput.value.trim();
+  if (!bulletPoints) {
+    alert("箇条書きの内容を入力してください。");
+    return;
+  }
+
+  // スピナーを付けて生成中状態に
+  generatePrButton.disabled = true;
+  generatePrButton.textContent = "生成中...";
+  const spinner = document.createElement("span");
+  spinner.classList.add("spinner");
+  generatePrButton.appendChild(spinner);
+
+  try {
+    const requestBody = {
+      workflow_id: PR_WORKFLOW_ID,
+      inputs: { text: bulletPoints },
+      user: "guest_user",
+    };
+
+    const response = await fetch("https://api.dify.ai/v1/workflows/run", {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: PR_API_KEY,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        `Dify APIエラー: ${response.status} ${
+          response.statusText
+        } - ${JSON.stringify(errorData)}`
+      );
+    }
+
+    const data = await response.json();
+    console.log("自己PRレスポンス:", data);
+    const generatedText = data?.data?.outputs?.text || "生成テキストなし";
+
+    // テキストエリアに反映
+    prInput.value = generatedText;
+    // プレビュー更新
+    prInput.dispatchEvent(new Event("input"));
+
+    alert("自己PRを自動生成しました。");
+  } catch (error) {
+    console.error(error);
+    alert("エラーが発生しました(自己PR): " + error.message);
+  } finally {
+    // スピナー解除
+    generatePrButton.removeChild(spinner);
+    generatePrButton.disabled = false;
+    generatePrButton.textContent = "自己PRを自動生成";
+  }
 });

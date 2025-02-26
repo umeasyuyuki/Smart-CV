@@ -39,11 +39,16 @@
         <div class="row-inline">
           <div class="form-group name-group">
             <label for="input-name">名前</label>
-            <input type="text" id="input-name" placeholder="" />
+            <!-- ▼ 例のサンプルを placeholder に入れる -->
+            <input type="text" id="input-name" placeholder="例：山田 太郎" />
           </div>
           <div class="form-group furigana-group">
             <label for="input-furigana">ふりがな</label>
-            <input type="text" id="input-furigana" placeholder="" />
+            <input
+              type="text"
+              id="input-furigana"
+              placeholder="例：やまだ たろう"
+            />
           </div>
         </div>
 
@@ -98,46 +103,82 @@
         <div class="section-title">住所</div>
         <div class="post-code-group">
           <label for="input-postal-code">郵便番号</label>
-          <input type="text" id="input-postal-code" placeholder="" />
+          <input
+            type="text"
+            id="input-postal-code"
+            placeholder="例：123-4567"
+          />
         </div>
         <div class="address-furigana-group">
           <label for="input-address-furigana">フリガナ</label>
-          <input type="text" id="input-address-furigana" placeholder="" />
+          <input
+            type="text"
+            id="input-address-furigana"
+            placeholder="例：トウキョウト ミナトク..."
+          />
         </div>
         <div class="address-group">
           <label for="input-address">現住所</label>
-          <input type="text" id="input-address" placeholder="" />
+          <input
+            type="text"
+            id="input-address"
+            placeholder="例：東京都港区○○1-2-3"
+          />
         </div>
         <div class="tell-group">
           <label for="input-phone">電話</label>
-          <input type="text" id="input-phone" placeholder="" />
+          <input type="text" id="input-phone" placeholder="例：090-1234-5678" />
         </div>
         <div class="mail-group">
           <label for="input-email">Email</label>
-          <input type="text" id="input-email" placeholder="" />
+          <input
+            type="text"
+            id="input-email"
+            placeholder="例：taro@example.com"
+          />
         </div>
 
         <!-- 連絡先（現住所以外） -->
         <div class="section-title">連絡先（現住所以外）</div>
         <div class="t-post-code-group">
           <label for="input-alt-postal-code">郵便番号</label>
-          <input type="text" id="input-alt-postal-code" />
+          <input
+            type="text"
+            id="input-alt-postal-code"
+            placeholder="例：987-6543"
+          />
         </div>
         <div class="t-address-furigana-group">
           <label for="input-alt-address-furigana">フリガナ</label>
-          <input type="text" id="input-alt-address-furigana" />
+          <input
+            type="text"
+            id="input-alt-address-furigana"
+            placeholder="例：オオサカフ オオサカシ..."
+          />
         </div>
         <div class="t-address-group">
           <label for="input-alt-address">住所</label>
-          <input type="text" id="input-alt-address" />
+          <input
+            type="text"
+            id="input-alt-address"
+            placeholder="例：大阪府大阪市○○1-2-3"
+          />
         </div>
         <div class="t-tell-group">
           <label for="input-alt-phone">電話</label>
-          <input type="text" id="input-alt-phone" />
+          <input
+            type="text"
+            id="input-alt-phone"
+            placeholder="例：06-1234-5678"
+          />
         </div>
         <div class="t-mail-group">
           <label for="input-alt-email">Email</label>
-          <input type="text" id="input-alt-email" placeholder="" />
+          <input
+            type="text"
+            id="input-alt-email"
+            placeholder="例：alt@example.com"
+          />
         </div>
 
         <!-- 学歴・職歴 -->
@@ -206,8 +247,6 @@
         <!-- 志望動機 -->
         <div class="section-title">志望動機</div>
         <div class="form-group">
-          <!-- 最終的な志望動機の文章を表示するテキストエリア -->
-          <textarea id="input-motivation" placeholder=""></textarea>
           <!-- 箇条書き入力用のモーダルを開くボタン -->
           <button
             type="button"
@@ -216,17 +255,19 @@
           >
             志望動機のAI入力
           </button>
+          <!-- 志望動機はサンプル不要→placeholderは空のまま -->
+          <textarea id="input-motivation" placeholder=""></textarea>
         </div>
 
         <!-- 自己PR -->
         <div class="section-title">自己PR</div>
         <div class="form-group">
-          <!-- 最終的な自己PRの文章を表示するテキストエリア -->
-          <textarea id="input-pr" placeholder=""></textarea>
           <!-- 箇条書き入力用のモーダルを開くボタン -->
           <button type="button" id="open-pr-modal" class="open-modal-button">
             自己PRのAI入力
           </button>
+          <!-- 自己PRもサンプル不要→placeholderは空のまま -->
+          <textarea id="input-pr" placeholder=""></textarea>
         </div>
 
         <!-- 本人希望 -->
@@ -234,10 +275,13 @@
           本人希望（給与・職種・勤務時間・勤務地 等）
         </div>
         <div class="form-group">
-          <textarea id="input-request" placeholder=""></textarea>
+          <!-- ▼ ここにサンプル例を入れる -->
+          <textarea
+            id="input-request"
+            placeholder="例：給与は月◯◯万円以上、フルタイム勤務希望、勤務地は◯◯、リモートワーク可など"
+          ></textarea>
         </div>
-
-         <!-- 利用規約 -->
+        <!-- 利用規約 -->
         <div class="section-title">利用規約</div>
         <div class="terms-box">
           <h2>利用規約</h2>
@@ -260,17 +304,18 @@
             本サービスは、ユーザーが履歴書および職務経歴書を作成できるWebアプリです。ユーザーが本サービスを利用して入力した情報（氏名、住所、電話番号、メールアドレス、職務経歴など）は、本サービスの目的に従い利用されます。
           </p>
 
+          <!-- 以下、原文通り -->
           <p><strong>第3条（登録情報と個人情報の取扱い）</strong></p>
           <ol>
             <li>
               ユーザーが本サービスを利用する際、個人情報（履歴書や職務経歴を含む）を入力することができます。
             </li>
             <li>
-              運営者は、取得した個人情報を以下の目的で利用します。<br>
-              ・ユーザーの履歴書・職務経歴書の作成・保存<br>
-              ・スカウト対象者としてのデータベース登録<br>
-              ・求人企業や採用担当者への情報提供<br>
-              ・本サービスの運営・改善<br>
+              運営者は、取得した個人情報を以下の目的で利用します。<br />
+              ・ユーザーの履歴書・職務経歴書の作成・保存<br />
+              ・スカウト対象者としてのデータベース登録<br />
+              ・求人企業や採用担当者への情報提供<br />
+              ・本サービスの運営・改善<br />
               ・その他、ユーザーが同意した目的での利用
             </li>
             <li>
@@ -280,7 +325,6 @@
               ユーザーは、自身の情報の提供を希望しない場合、本サービスの利用を停止することができます。
             </li>
           </ol>
-
           <p><strong>第4条（スカウトサービスについて）</strong></p>
           <ol>
             <li>
@@ -293,7 +337,6 @@
               ユーザーは、本サービスを利用することで、求人企業・採用担当者からの連絡を受ける可能性があることに同意するものとします。
             </li>
           </ol>
-
           <p><strong>第5条（禁止事項）</strong></p>
           <p>
             ユーザーは、本サービスの利用にあたり、以下の行為を行ってはなりません。
@@ -348,8 +391,8 @@
           </ol>
 
           <p>
-            【最終更新日】2025年2月25日<br>
-            【運営者】[運営者名]<br>
+            【最終更新日】2025年2月25日<br />
+            【運営者】[運営者名]<br />
             【お問い合わせ】[問い合わせ先メールアドレス]
           </p>
         </div>
@@ -371,6 +414,13 @@
 
       <!-- 右カラム：プレビュー(複数ページ) -->
       <div class="right">
+        <!-- ▼ ズーム操作ボタン -->
+        <div class="zoom-controls">
+          <button class="zoom-btn" id="zoom-out">-</button>
+          <span id="zoom-level">100%</span>
+          <button class="zoom-btn" id="zoom-in">+</button>
+        </div>
+
         <div class="resume-pages" id="resume-pages">
           <!-- JSで1ページ目を自動生成 -->
         </div>

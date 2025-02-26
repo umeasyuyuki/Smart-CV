@@ -7,13 +7,13 @@
   box-sizing: border-box;
 }
 
-/* 背景色や標準フォント設定 */
+/* 全体の背景色を淡い水色寄りに */
 body {
   font-family: "Istok Web", sans-serif;
   color: #333;
-  background-color: #fdfdfd;
+  background: #f5fcfc; /* お好みで微調整: #f0fcfc, #e8fbfb など */
   line-height: 1.6;
-  /* ヘッダー固定分の上余白を確保（必要に応じて調整） */
+  /* 固定ヘッダー分の上余白を確保（必要に応じて調整） */
   padding-top: 80px;
 }
 
@@ -26,40 +26,39 @@ body {
   left: 0;
   width: 100%;
   z-index: 9999;
-  /* ダークなグラデーション背景 */
-  background: linear-gradient(135deg, #111 0%, #222 100%);
+  /* 白～淡い水色のグラデーション */
+  background: linear-gradient(135deg, #ffffff 0%, #d8ffff 100%);
   text-align: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   padding: 10px 0 15px 0;
+  border-bottom: 1px solid #b2f0f0; /* 淡いライン */
 }
 
 /* タイトル */
 .header h1 {
-  font-family: "Montserrat", sans-serif; /* 太めでかっこいいフォント */
-  font-size: 2.6rem;
-  letter-spacing: 2px;
-  margin-bottom: 8px;
+  font-family: "Montserrat", sans-serif; /* かっこいい太めフォント */
+  font-size: 2.4rem;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
 }
 
 /* Smart, CV, Dashの色分け */
 .smart {
-  color: #fff;
+  color: #008b8b; /* 海っぽい水色系 */
 }
-
 .dash {
-  color: #fff;
+  color: #008b8b;
   margin: 0 4px;
 }
-
 .cv {
-  color: #2cddb4; /* アクセントカラー */
+  color: #00b7b7; /* さらに明るいアクア系 */
 }
 
 /* サブタイトル */
 .subtitle {
   font-size: 1rem;
   font-weight: normal;
-  color: #ccc;
+  color: #666;
   line-height: 1.4;
   margin: 0 10px;
 }
@@ -87,7 +86,7 @@ body {
 .column h2 {
   font-size: 1.2rem;
   margin-bottom: 15px;
-  color: #000;
+  color: #006666; /* 見出しを少し濃いめの水色 */
   font-weight: bold;
   position: relative;
 }
@@ -98,13 +97,14 @@ body {
   border-radius: 8px;
   transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  border: 2px solid #b2f0f0; /* ほんのり水色の枠 */
 }
 
 /* 画像ホバー時のアニメーション */
 .column img:hover {
   transform: scale(1.03);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* ---------------------------------------------------- */
@@ -114,26 +114,26 @@ body {
   max-width: 800px;
   margin: 60px auto 20px auto;
   padding: 30px 20px;
-  background: linear-gradient(135deg, #d8fff9 0%, #fff 100%);
-  border: 1px solid #ccc;
+  background: linear-gradient(135deg, #ffffff 0%, #d8ffff 100%);
+  border: 1px solid #b2f0f0;
   border-radius: 10px;
   text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
 /* bottom-box 内のテキスト */
 .bottom-box p {
   margin-bottom: 16px;
   font-weight: bold;
-  color: #111;
+  color: #333;
   line-height: 1.5;
 }
 
 /* 強調文字（最短３０秒） */
 .emphasis {
-  color: #ff3333;
+  color: #ff6666; /* ここだけあえて赤系で強調 */
   font-weight: bold;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
 }
 
 /* 呼びかけ部分 */
@@ -141,7 +141,7 @@ body {
   font-size: 1.2rem;
   margin-top: 20px;
   font-weight: bold;
-  color: #333;
+  color: #008080; /* 濃いめのターコイズ */
 }
 
 /* 注意書き */
@@ -150,10 +150,10 @@ body {
   margin-top: 40px;
   font-weight: bold;
   text-align: center;
-  color: #666;
+  color: #555;
 }
 
-/* スマホ等でタイトル折り返しが起きたときなどに使う */
+/* スマホ等でタイトルを改行させるためのクラス */
 .sp-br {
   display: none;
 }
@@ -172,7 +172,7 @@ body {
     font-size: 0.9rem;
   }
 
-  /* 改行を表示 */
+  /* 小さい画面で改行を有効にする */
   .sp-br {
     display: inline;
   }
@@ -181,6 +181,7 @@ body {
   .content {
     flex-direction: column;
     gap: 30px;
+    align-items: center;
   }
 
   .column {
@@ -195,6 +196,6 @@ body {
   }
 
   .emphasis {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
   }
 }

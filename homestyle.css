@@ -131,7 +131,7 @@ body {
 
 /* 強調文字（最短３０秒） */
 .emphasis {
-  color: #ff6666; /* ここだけあえて赤系で強調 */
+  color: #5175ea; /* ここだけあえて赤系で強調 */
   font-weight: bold;
   font-size: 1.4rem;
 }

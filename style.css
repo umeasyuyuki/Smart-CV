@@ -388,7 +388,7 @@ textarea {
   margin-top: 16px;
   margin-bottom: 16px;
   font-size: 0.9rem;
-  max-height: 33vh; /* 画面高の約1/2 */
+  max-height: 16vh; /* 画面高の約1/2 */
   overflow-y: auto; /* 縦スクロール */
   overflow-x: hidden; /* 横にはみ出さない */
   word-break: break-word; /* 行折り返し */

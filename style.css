@@ -381,13 +381,17 @@ textarea {
 
 /* 利用規約 */
 .terms-box {
+  border: 1px solid #ccc;
   border-radius: 6px;
   background: #fff;
   padding: 10px;
   margin-top: 16px;
   margin-bottom: 16px;
   font-size: 0.9rem;
-  margin-left: 1em;
+  max-height: 33vh; /* 画面高の約1/2 */
+  overflow-y: auto; /* 縦スクロール */
+  overflow-x: hidden; /* 横にはみ出さない */
+  word-break: break-word; /* 行折り返し */
 }
 
 /************************************************************

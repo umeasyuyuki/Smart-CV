@@ -395,7 +395,7 @@ textarea {
 }
 
 /************************************************************
- * 右カラム：履歴書プレビュー (複数ページ分割)
+ * 右カラム：履歴書プレビュー (複数ページ) 
  ************************************************************/
 .right {
   background-color: #d9d9d9;
@@ -405,6 +405,7 @@ textarea {
   overflow-y: auto;
   overflow-x: hidden;
   padding: 20px;
+  position: relative; /* 追加 */
 }
 .resume-pages {
   display: flex;
@@ -844,6 +845,7 @@ th {
   transition: background-color 0.3s, opacity 0.3s;
   margin-top: 8px;
   display: inline-block;
+  margin-bottom: 2px;
 }
 .open-modal-button:hover {
   opacity: 0.9;
@@ -875,6 +877,63 @@ th {
   animation: spin 1s linear infinite;
   margin-left: 8px;
 }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/************************************************************
+ * 追加：ズームコントロール
+ ************************************************************/
+/* ズーム操作ボタンを絶対配置し、上部中央に固定。z-indexを大きめに */
+.zoom-controls {
+  position: absolute;
+  top: 0; /* 画面上部に固定（必要に応じて数値を調整） */
+  left: 50%; /* 左右中央 */
+  transform: translateX(-50%);
+  z-index: 100; /* プレビューより前面に表示 */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* プレビュー要素に上マージンを足して、ボタンと重ならないようにする */
+.right .resume-pages {
+  margin-top: 20px; /* ここで空ける高さを調整 */
+}
+
+.zoom-btn {
+  background: linear-gradient(45deg, #42e3f5, #60bde7);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  transition: background-color 0.3s, opacity 0.3s;
+}
+.zoom-btn:hover {
+  opacity: 0.9;
+}
+#zoom-level {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-top-color: #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 8px;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);

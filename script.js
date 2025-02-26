@@ -421,7 +421,7 @@ document.getElementById("add-education-row").addEventListener("click", () => {
     <div class="form-inline">
       <select class="edu-year"><option value="">--</option></select>
       <select class="edu-month"><option value="">--</option></select>
-      <input type="text" class="edu-work" placeholder="" />
+      <input type="text" class="edu-work" placeholder="例：〇〇大学 卒業" />
     </div>
   `;
   eduContainer.appendChild(row);
@@ -525,7 +525,12 @@ document.getElementById("add-skill-row").addEventListener("click", () => {
     <div class="form-inline">
       <select class="license-year"><option value="">--</option></select>
       <select class="license-month"><option value="">--</option></select>
-      <input type="text" class="skill-history" placeholder="" style="text-align: left;" />
+      <input
+        type="text"
+        class="skill-history"
+        placeholder="例：英語検定2級"
+        style="text-align: left;"
+      />
     </div>
   `;
   skillContainer.appendChild(row);
@@ -631,6 +636,20 @@ pdfSaveBtn.addEventListener("click", async () => {
     alert("利用規約に同意する必要があります。");
     return;
   }
+
+  // ▼ ボタンを押したことを視覚的に示すための処理
+  // 1) ボタン無効化
+  pdfSaveBtn.disabled = true;
+  // 2) 元のテキストを保存し、"生成中..."に変更
+  const originalText = pdfSaveBtn.textContent;
+  pdfSaveBtn.textContent = "生成中...";
+
+  // 3) スピナー要素を作成してボタン内に挿入
+  const spinnerEl = document.createElement("span");
+  spinnerEl.classList.add("spinner"); // 既存CSSの.spinnerを利用
+  pdfSaveBtn.appendChild(spinnerEl);
+
+  // ページ溢れチェック
   splitPagesIfOverflow();
 
   // 送信例データ
@@ -644,7 +663,7 @@ pdfSaveBtn.addEventListener("click", async () => {
     address: document.getElementById("input-address").value,
   };
 
-  // GASへ送信（不要な場合は削除）
+  // GASへ送信（不要なら削除OK）
   try {
     const response = await fetch(scriptURL, {
       method: "POST",
@@ -660,29 +679,39 @@ pdfSaveBtn.addEventListener("click", async () => {
   }
 
   // PDF作成
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("portrait", "pt", "a4");
-  const pageElems = document.querySelectorAll(".resume-page");
+  try {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("portrait", "pt", "a4");
+    const pageElems = document.querySelectorAll(".resume-page");
 
-  for (let i = 0; i < pageElems.length; i++) {
-    if (i > 0) pdf.addPage();
+    for (let i = 0; i < pageElems.length; i++) {
+      if (i > 0) pdf.addPage();
 
-    // html2canvasでページ全体を画像化
-    const canvas = await html2canvas(pageElems[i], { scale: 2 });
-    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      // html2canvasでページ全体を画像化
+      const canvas = await html2canvas(pageElems[i], { scale: 2 });
+      const imgData = canvas.toDataURL("image/jpeg", 1.0);
 
-    // PDF内部の寸法に合わせて画像を描画
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidthPx = canvas.width;
-    const imgHeightPx = canvas.height;
-    const scale = pdfWidth / imgWidthPx;
-    const imgHeightInPdf = imgHeightPx * scale;
+      // PDF内部の寸法に合わせて画像を描画
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidthPx = canvas.width;
+      const imgHeightPx = canvas.height;
+      const scale = pdfWidth / imgWidthPx;
+      const imgHeightInPdf = imgHeightPx * scale;
 
-    pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, imgHeightInPdf);
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, imgHeightInPdf);
+    }
+
+    pdf.save("履歴書.pdf");
+  } catch (error) {
+    console.error("PDF生成エラー:", error);
+    alert("PDF生成中にエラーが発生しました");
+  } finally {
+    // ▼ 処理が終わったらボタンを元に戻す
+    pdfSaveBtn.removeChild(spinnerEl);
+    pdfSaveBtn.textContent = originalText;
+    pdfSaveBtn.disabled = false;
   }
-
-  pdf.save("履歴書.pdf");
 });
 
 /************************************************************
@@ -854,3 +883,30 @@ generatePrButton.addEventListener("click", async () => {
     generatePrButton.textContent = "自己PRを自動生成";
   }
 });
+
+/************************************************************
+ * 10) ズーム機能の実装
+ ************************************************************/
+const zoomInBtn = document.getElementById("zoom-in");
+const zoomOutBtn = document.getElementById("zoom-out");
+const zoomLevelEl = document.getElementById("zoom-level");
+let currentZoom = 1.0; // 初期倍率
+
+zoomInBtn.addEventListener("click", () => {
+  currentZoom += 0.1;
+  if (currentZoom > 2.0) currentZoom = 2.0; // 200%上限
+  applyZoom();
+});
+
+zoomOutBtn.addEventListener("click", () => {
+  currentZoom -= 0.1;
+  if (currentZoom < 0.5) currentZoom = 0.5; // 50%下限
+  applyZoom();
+});
+
+function applyZoom() {
+  const pages = document.querySelector(".resume-pages");
+  pages.style.transform = `scale(${currentZoom})`;
+  pages.style.transformOrigin = `top center`;
+  zoomLevelEl.textContent = Math.round(currentZoom * 100) + "%";
+}

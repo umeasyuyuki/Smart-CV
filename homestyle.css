@@ -1,5 +1,5 @@
 /* ---------------------------------------------------- */
-/* リセットや基本設定                                   */
+/* 1. リセットや基本設定                                 */
 /* ---------------------------------------------------- */
 * {
   margin: 0;
@@ -7,136 +7,133 @@
   box-sizing: border-box;
 }
 
+/* 背景色や標準フォント設定 */
 body {
   font-family: "Istok Web", sans-serif;
   color: #333;
-  margin: 20px;
+  background-color: #fdfdfd;
   line-height: 1.6;
-  background-color: #fdfdfd; /* 背景色を薄めに設定（お好み） */
+  /* ヘッダー固定分の上余白を確保（必要に応じて調整） */
+  padding-top: 80px;
 }
 
 /* ---------------------------------------------------- */
-/* ヘッダー部分                                         */
+/* 2. ヘッダー部分                                       */
 /* ---------------------------------------------------- */
 .header {
-  position: fixed; /* スクロールしても動かないように固定 */
-  top: 0; 
-  left: 0; 
-  width: 100%; 
-  z-index: 9999; /* ヘッダーが他要素の上に重なる */
-
-  background-color: #fff; /* 背景色 */
-  text-align: center;     
-  border-bottom: 1px solid #ccc;
-  /* height, line-heightなどは固定しない方がスマホ等でも崩れにくい */
-  padding: 10px 0; /* 縦方向の余白 */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
+  /* ダークなグラデーション背景 */
+  background: linear-gradient(135deg, #111 0%, #222 100%);
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  padding: 10px 0 15px 0;
 }
 
+/* タイトル */
 .header h1 {
-  margin-bottom: 5px;
+  font-family: "Montserrat", sans-serif; /* 太めでかっこいいフォント */
+  font-size: 2.6rem;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
 }
 
+/* Smart, CV, Dashの色分け */
 .smart {
-  color: #000;
-  font-size: 55px;
+  color: #fff;
 }
 
 .dash {
-  font-size: 55px;
-  margin: 0 2;
+  color: #fff;
+  margin: 0 4px;
 }
 
 .cv {
-  color: #2cddb4;
-  font-size: 55px;
+  color: #2cddb4; /* アクセントカラー */
 }
 
-.header > span {
-  font-size: 20px;
-  color: #000;
-}
-
-/* 横線 */
-hr {
-  margin: 20px 0 20px 0;
-  border: none;
-  border-top: 1px solid #ccc;
+/* サブタイトル */
+.subtitle {
+  font-size: 1rem;
+  font-weight: normal;
+  color: #ccc;
+  line-height: 1.4;
+  margin: 0 10px;
 }
 
 /* ---------------------------------------------------- */
-/* メインコンテンツのレイアウト                         */
+/* 3. メインコンテンツ                                   */
 /* ---------------------------------------------------- */
 .content {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  margin-top: 120px; /* 固定ヘッダーの分だけ上に空白を */
-  padding: 20px;
   gap: 50px;
+  margin: 40px auto;
+  max-width: 1200px;
+  padding: 0 20px;
 }
 
-/* カラムごとの設定 */
+/* カラム */
 .column {
   text-align: center;
-  max-width: 300px;
+  width: 250px; /* 必要に応じて調整 */
 }
 
+/* カラムのタイトル */
 .column h2 {
   font-size: 1.2rem;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   color: #000;
+  font-weight: bold;
+  position: relative;
 }
 
+/* 画像 */
 .column img {
   max-width: 100%;
-  border: 1px solid #ccc;
+  border-radius: 8px;
+  transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
+/* 画像ホバー時のアニメーション */
 .column img:hover {
-  opacity: 0.8;
+  transform: scale(1.03);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
 }
 
 /* ---------------------------------------------------- */
-/* 下部の説明ボックス                                   */
+/* 4. 下部の説明ボックス                                 */
 /* ---------------------------------------------------- */
 .bottom-box {
   max-width: 800px;
-  margin: 0 auto 40px auto;
-  padding: 20px;
-  background-color: #d8fff9;
+  margin: 60px auto 20px auto;
+  padding: 30px 20px;
+  background: linear-gradient(135deg, #d8fff9 0%, #fff 100%);
   border: 1px solid #ccc;
+  border-radius: 10px;
   text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
+/* bottom-box 内のテキスト */
 .bottom-box p {
-  margin-bottom: 10px;
+  margin-bottom: 16px;
   font-weight: bold;
-  color: #000;
+  color: #111;
+  line-height: 1.5;
 }
 
-/* 左揃え用クラス */
-.left-align {
-  text-align: left;
-  max-width: 600px;
-  margin: 0 auto 10px auto;
-}
-
-/* 「最短３０秒で」の部分を赤文字・太字 */
+/* 強調文字（最短３０秒） */
 .emphasis {
   color: #ff3333;
   font-weight: bold;
-  font-size: 25px;
-}
-
-/* キーワード強調 */
-.keyword {
-  font-size: 1.1em;
-  font-weight: bold;
-}
-
-.space-left {
-  margin-left: 7.7rem; /* 必要に応じて調整 */
+  font-size: 1.5rem;
 }
 
 /* 呼びかけ部分 */
@@ -144,51 +141,60 @@ hr {
   font-size: 1.2rem;
   margin-top: 20px;
   font-weight: bold;
+  color: #333;
 }
 
-.keikoku{
-  font-size: 1.2rem;
-  margin-top: 20px;
+/* 注意書き */
+.keikoku {
+  font-size: 1rem;
+  margin-top: 40px;
   font-weight: bold;
   text-align: center;
+  color: #666;
+}
+
+/* スマホ等でタイトル折り返しが起きたときなどに使う */
+.sp-br {
+  display: none;
 }
 
 /* ---------------------------------------------------- */
-/* レスポンシブ対応: 768px以下の画面用メディアクエリ    */
+/* 5. レスポンシブ対応（768px以下）                      */
 /* ---------------------------------------------------- */
 @media (max-width: 768px) {
-  /* コンテンツを縦に並べる */
+
+  /* ヘッダーのタイトルサイズ調整 */
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  /* 改行を表示 */
+  .sp-br {
+    display: inline;
+  }
+
+  /* カラムを縦並びに */
   .content {
     flex-direction: column;
-    align-items: center;
-    margin-top: 160px; /* 必要に応じて調整 */
-    gap: 20px;
+    gap: 30px;
   }
 
-  /* カラムの幅を広げて1カラム表示にする */
   .column {
-    max-width: 90%;
-    margin-bottom: 20px;
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
   }
 
-  /* 文字サイズの微調整 */
-  .smart,
-  .dash,
-  .cv {
-    font-size: 40px;
-  }
-  .header > span {
-    font-size: 16px;
-  }
-
-  /* bottom-box の幅調整 */
   .bottom-box {
-    max-width: 90%;
-    margin: 20px auto;
+    width: 90%;
+    margin: 40px auto 20px auto;
   }
 
-  /* 左余白を小さくするなど */
-  .space-left {
-    margin-left: 1.5rem;
+  .emphasis {
+    font-size: 1.4rem;
   }
 }

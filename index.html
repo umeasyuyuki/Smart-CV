@@ -4,37 +4,31 @@
     <meta charset="UTF-8" />
     <title>Smart-CV</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <!-- Google Fontsなど -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Istok+Web&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Istok+Web&family=Montserrat:wght@700&display=swap"
       rel="stylesheet"
     />
-
-    <!-- ローカルのCSSファイルを読み込む -->
-    <!-- 同じフォルダに homestyle.css があるなら、そのまま相対パスでOK -->
+    <!-- ローカルCSS -->
     <link rel="stylesheet" href="homestyle.css" />
   </head>
 
   <body>
-    <!-- ヘッダー部分 -->
+    <!-- ヘッダー -->
     <div class="header">
       <h1>
         <span class="smart">Smart</span>
         <span class="dash">-</span>
         <span class="cv">CV</span>
       </h1>
-      <h2>【完全無料・会員登録不要】履歴書・職務経歴書自動作成サービス</h2>
+      <h2 class="subtitle">【完全無料・会員登録不要】<br class="sp-br">履歴書・職務経歴書自動作成サービス</h2>
     </div>
-    <hr />
 
-    <!-- メインコンテンツ：履歴書・職務経歴書の画像 -->
+    <!-- メインコンテンツ -->
     <div class="content">
-
       <!-- 履歴書カラム -->
       <div class="column">
         <h2>【履歴書】</h2>
-        <!-- 画像をクリックすると「resume.html」へ遷移 -->
         <a href="resume.html">
           <img
             src="resume.png"
@@ -46,7 +40,6 @@
       <!-- 職務経歴書カラム -->
       <div class="column">
         <h2>【職務経歴書】</h2>
-        <!-- 画像をクリックすると「syokumu.html」へ遷移 -->
         <a href="syokumu.html">
           <img
             src="career.png"
@@ -54,14 +47,14 @@
           />
         </a>
       </div>
-
     </div>
 
     <!-- 下部の説明ボックス -->
     <div class="bottom-box">
       <p>
         「履歴書作成って面倒…」
-        「職務経歴書はどう書けばいいのかわからない…」そんなお悩み解決！
+        「職務経歴書はどう書けばいいのかわからない…」<br class="sp-br">
+        そんなお悩み解決！
       </p>
       <p>
         履歴書・職務経歴書を
@@ -72,8 +65,10 @@
         今すぐ試して、転職・就職活動をスタートしましょう！
       </p>
     </div>
+
     <p class="keikoku">
-        ※履歴書を先に作成することをお勧めします。
-      </p>
+      ※履歴書を先に作成することをお勧めします。
+    </p>
+
   </body>
 </html>

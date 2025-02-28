@@ -254,7 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("利用規約に同意する必要があります。");
         return;
       }
-     
+      // ▼▼▼▼ ここから必須項目の未入力チェックを追加 ▼▼▼▼
       // 必須項目のIDを配列に
       const requiredFields = [
         "input-name",
@@ -1051,7 +1051,7 @@ async function handleDownloadPDF() {
       body: JSON.stringify(sendData),
     });
     if (!response.ok) {
-      console.error("エラー: status =", response.status);
+      console.error("GAS送信エラー: status =", response.status);
     } else {
       const resultText = await response.text();
       console.log("GAS応答 =", resultText);
@@ -1081,7 +1081,7 @@ async function handleDownloadPDF() {
     alert("PDFダウンロードが開始されました！");
     console.log("[DEBUG] PDF download complete.");
   } catch (e) {
-    console.error("エラーが発生しました。:", e);
+    console.error("PDF生成またはGAS送信エラー:", e);
     alert("エラー: " + e.message);
   }
 }

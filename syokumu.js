@@ -1,3 +1,4 @@
+<script>
 /***************************************************
  * (A) 連携先URLなどの設定
  *   → GAS用URLはオリジナルに戻し、それ以外はBase64のまま
@@ -253,6 +254,25 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("利用規約に同意する必要があります。");
         return;
       }
+      // ▼▼▼▼ ここから必須項目の未入力チェックを追加 ▼▼▼▼
+      // 必須項目のIDを配列に
+      const requiredFields = [
+        "input-name",
+        "input-tel",
+        "input-mail",
+        "input-summary",
+        "input-skill",
+        "input-pr",
+      ];
+      for (const fieldId of requiredFields) {
+        const value = document.getElementById(fieldId).value.trim();
+        if (!value) {
+          alert("必須項目が未入力です。すべての項目を入力してください。");
+          return;
+        }
+      }
+      // ▲▲▲▲ ここまで追加 ▲▲▲▲
+
       // ダウンロード中の見た目変更
       pdfBtn.disabled = true;
       const originalText = pdfBtn.textContent;
@@ -1065,3 +1085,4 @@ async function handleDownloadPDF() {
     alert("エラー: " + e.message);
   }
 }
+</script>

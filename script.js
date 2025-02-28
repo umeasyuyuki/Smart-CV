@@ -712,7 +712,35 @@ pdfSaveBtn.addEventListener("click", async () => {
     pdfSaveBtn.textContent = originalText;
     pdfSaveBtn.disabled = false;
   }
+
+  // ▼ PDF保存後にモーダルを表示する（追加部分）
+  const postPdfModal = document.getElementById("post-pdf-modal-overlay");
+  if (postPdfModal) {
+    postPdfModal.style.display = "flex"; // モーダルを表示
+  }
 });
+
+/************************************************************
+ * PDFダウンロード後のモーダル「はい/いいえ」ボタン
+ ************************************************************/
+// 「はい」→ syokumu.html へ遷移
+const postPdfYesBtn = document.getElementById("post-pdf-yes-btn");
+if (postPdfYesBtn) {
+  postPdfYesBtn.addEventListener("click", () => {
+    window.location.href = "syokumu.html";
+  });
+}
+
+// 「いいえ」→ モーダル閉じる
+const postPdfNoBtn = document.getElementById("post-pdf-no-btn");
+if (postPdfNoBtn) {
+  postPdfNoBtn.addEventListener("click", () => {
+    const postPdfModal = document.getElementById("post-pdf-modal-overlay");
+    if (postPdfModal) {
+      postPdfModal.style.display = "none";
+    }
+  });
+}
 
 /************************************************************
  * 志望動機 (モーダル) の自動生成ロジック
@@ -909,32 +937,4 @@ function applyZoom() {
   pages.style.transform = `scale(${currentZoom})`;
   pages.style.transformOrigin = `top center`;
   zoomLevelEl.textContent = Math.round(currentZoom * 100) + "%";
-
- // ▼ PDF保存後にモーダルを表示する
-  const postPdfModal = document.getElementById("post-pdf-modal-overlay");
-  if (postPdfModal) {
-    postPdfModal.style.display = "flex"; // モーダルを表示
-  }
-});
-
-/************************************************************
- * ★ 追加：PDFダウンロード後のモーダルの「はい/いいえ」ボタン動作
- ************************************************************/
- // 「はい」→ syokumu.html へ遷移
- const postPdfYesBtn = document.getElementById("post-pdf-yes-btn");
- if (postPdfYesBtn) {
-   postPdfYesBtn.addEventListener("click", () => {
-     window.location.href = "syokumu.html";
-   });
- }
-
- // 「いいえ」→ モーダル閉じる
- const postPdfNoBtn = document.getElementById("post-pdf-no-btn");
- if (postPdfNoBtn) {
-   postPdfNoBtn.addEventListener("click", () => {
-     const postPdfModal = document.getElementById("post-pdf-modal-overlay");
-     if (postPdfModal) {
-       postPdfModal.style.display = "none";
-     }
-   });
- }
+}

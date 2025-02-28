@@ -1,697 +1,1072 @@
-/************************************************************
- * 1) GAS連携用URL（ダミーURLを必要に応じて差し替えてください）
- ************************************************************/
+<script>
+/***************************************************
+ * (A) 連携先URLなどの設定
+ *   → GAS用URLはオリジナルに戻し、それ以外はBase64のまま
+ ***************************************************/
+// ▼ 既存：スプレッドシート更新用のGAS (元に戻す)
 const scriptURL =
-  "https://script.google.com/macros/s/AKfycbyYmqbjwwkZlxWNfFVZi8ORT0mHw0sh9VlpYBcVsYz_UZSB63OM6LOya0UAZgZgCyhGpw/exec";
+  "https://script.google.com/macros/s/AKfycbzovpyw9ijTmD_YKLLCBYArxW8HVk1naH8Iln08EDOsxjq-4F5wz2jyQKEn47-iFAub/exec";
 
-/************************************************************
- * 2) 履歴書HTMLテンプレート（文字列として書く）
- ************************************************************/
-function generateResumeTemplate() {
-  // 学歴・職歴テーブル 12行ぶんを文字列として組み立て
-  let eduRowsHTML = "";
-  for (let i = 1; i <= 12; i++) {
-    eduRowsHTML += `
-      <tr id="edu-row-${i}" class="education-value">
-        <td class="education-year-value" id="edu-preview-year-${i}"></td>
-        <td class="education-container-month-value" id="edu-preview-month-${i}"></td>
-        <td class="education-history-value" id="edu-preview-work-${i}"></td>
-      </tr>
-    `;
+// ▼ 既存のDify直呼び用（残す）
+const difyUploadURL = atob("aHR0cHM6Ly9hcGkuZGlmeS5haS92MQ==");
+const difyAPIKey = atob("YXBwLW5lYzBOZEFESkRkcGVjUUtRWVZ0eHp6bUQ=");
+
+// ▼ 追加：Difyを呼び出す別のGAS (元に戻す)
+const difyGasURL =
+  "https://script.google.com/macros/s/AKfycbywNHTcJy5AqH0nnE5T9QuNgtwHGzsfbt6pB_etEh_JdV2BVtG8Asmhwhe9ulEmukkm/exec";
+
+/***************************************************
+ * (B) グローバル変数
+ ***************************************************/
+let selectedFile = null;
+let uploadedFileURL = null;
+
+// 職歴・免許・語学の現在数
+let careerCount = 1;
+let licenseCount = 1;
+let langCount = 1;
+
+// ズーム用
+let currentZoom = 1.0;
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 2.0;
+const ZOOM_STEP = 0.1;
+
+/***************************************************
+ * (C) 起動時
+ ***************************************************/
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("[DEBUG] DOMContentLoaded - setup...");
+
+  setupBindings();
+  updatePreviewPages();
+
+  // ファイル選択 (例)
+  const fileInput = document.getElementById("resume-file");
+  if (fileInput) {
+    fileInput.addEventListener("change", async (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        selectedFile = e.target.files[0];
+        alert("ファイルが選択されました: " + selectedFile.name);
+
+        try {
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+
+          // Dify用GASに送信
+          const response = await fetch(difyGasURL, {
+            method: "POST",
+            body: formData,
+          });
+          if (!response.ok) {
+            const errText = await response.text();
+            throw new Error("Dify用GASに送信失敗: " + errText);
+          }
+          const result = await response.json();
+          console.log("[DEBUG] difyGasURLからの結果 =", result);
+
+          if (result.text) {
+            const parsed = parseDifyText(result.text);
+            fillForm(parsed);
+          }
+
+          alert("Dify解析結果をフォームに反映しました。");
+          updatePreviewPages();
+        } catch (err) {
+          console.error(err);
+          alert("解析エラー: " + err.message);
+        }
+      }
+    });
   }
 
-  // 免許・資格テーブル 6行ぶんを文字列として組み立て
-  let skillRowsHTML = "";
-  for (let i = 1; i <= 6; i++) {
-    skillRowsHTML += `
-      <tr id="skill-row-${i}" class="skill-value">
-        <td class="skill-year-value" id="skill-preview-year-${i}"></td>
-        <td class="skill-container-month-value" id="skill-preview-month-${i}"></td>
-        <td class="skill-history-value" id="skill-preview-history-${i}"></td>
-      </tr>
-    `;
+  // モーダル(自己PR)の開閉
+  const openPrModalBtn = document.getElementById("open-pr-modal");
+  const closePrModalBtn = document.getElementById("close-pr-modal");
+  const prModalOverlay = document.getElementById("pr-modal-overlay");
+  if (openPrModalBtn && closePrModalBtn && prModalOverlay) {
+    openPrModalBtn.addEventListener("click", () => {
+      prModalOverlay.style.display = "flex";
+    });
+    closePrModalBtn.addEventListener("click", () => {
+      prModalOverlay.style.display = "none";
+    });
   }
 
-  // テンプレート全体をバッククォートで囲み、上記テーブル行を埋め込む
-  return `
-  <div class="resume-preview">
-    <div class="resume-content" id="resume-content-whole">
-      <div style="display: flex; justify-content: space-between; margin-bottom: 5mm;">
-        <div class="title">履歴書</div>
-        <div class="date-right" id="preview-today-date"></div>
-      </div>
+  // モーダル(職務要約例文)の開閉
+  const openSummaryModalBtn = document.getElementById("open-summary-example-modal");
+  const closeSummaryModalBtn = document.getElementById("close-summary-modal");
+  const summaryModalOverlay = document.getElementById("summary-example-overlay");
 
-      <!-- (1) 名前・ふりがな + 写真 -->
-      <div class="block">
-        <div class="top-section">
-          <table class="name-furigana-table">
-            <tr class="furigana-box">
-              <td class="furigana-label">ふりがな</td>
-              <td class="furigana-value">
-                <span id="preview-furigana"></span>
-              </td>
-            </tr>
-            <tr class="name-table">
-              <td class="name-label">氏名</td>
-              <td class="name-value-left">
-                <span id="preview-name" style="font-weight: bold"></span>
-              </td>
-            </tr>
-          </table>
-          <div class="photo-box">
-            <img id="preview-photo-img" />
-          </div>
-        </div>
-      </div>
-
-      <!-- (2) 生年月日・性別 -->
-      <div class="block">
-        <table class="birthday-gender-table">
-          <tr class="birthday-box">
-            <td class="birthday-label">生年月日</td>
-            <td class="birthday-value">
-              <span id="preview-birth-year"></span>年
-              <span id="preview-birth-month"></span>月
-              <span id="preview-birth-day"></span>日（
-              <span id="preview-age"></span>歳）
-            </td>
-            <td class="gender-value">
-              <span id="preview-gender"></span>
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <!-- (3) 電話番号・Email・現住所 -->
-      <div class="block">
-        <table class="contact-info-table">
-          <tr class="contact-info">
-            <th class="address-furigana-label">ふりがな</th>
-            <td class="address-furigana-value">
-              <span id="preview-address-furigana"></span>
-            </td>
-            <th class="tel-label">電話</th>
-            <td class="tel-value">
-              <span id="preview-phone"></span>
-            </td>
-          </tr>
-          <tr>
-            <th class="address-label">現住所</th>
-            <td class="address-value">
-              〒<span id="preview-postal-code"></span><br />
-              <span id="preview-address"></span>
-            </td>
-            <th class="email-label">Email</th>
-            <td class="email-value">
-              <span id="preview-email"></span>
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <!-- (4) 連絡先（現住所以外） -->
-      <div class="block">
-        <table class="alt-contact-table">
-          <tr class="alt-contact-info">
-            <th class="alt-address-furigana-label">ふりがな</th>
-            <td class="alt-address-furigana-value">
-              <span id="preview-alt-address-furigana"></span>
-            </td>
-            <th class="alt-tel-label">電話</th>
-            <td class="alt-tel-value">
-              <span id="preview-alt-phone"></span>
-            </td>
-          </tr>
-          <tr>
-            <th class="alt-address-label">現住所</th>
-            <td class="alt-address-value">
-              〒<span id="preview-alt-postal-code"></span><br />
-              <span id="preview-alt-address"></span>
-            </td>
-            <th class="alt-email-label">Email</th>
-            <td class="email-value">
-              <span id="preview-alt-email"></span>
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <!-- (5) 学歴・職歴：合計12行 -->
-      <div class="block">
-        <table class="education-table">
-          <tr class="education-info">
-            <th class="education-year">年</th>
-            <th class="education-container-month">月</th>
-            <th class="education-history">学歴・職歴</th>
-          </tr>
-          ${eduRowsHTML}
-        </table>
-      </div>
-
-      <!-- (6) 免許・資格：合計6行 -->
-      <div class="block">
-        <table class="skill-table">
-          <tr class="skill-info">
-            <th class="skill-year">年</th>
-            <th class="skill-container-month">月</th>
-            <th class="skill-history">免許・資格</th>
-          </tr>
-          ${skillRowsHTML}
-        </table>
-      </div>
-
-      <!-- (7) 志望動機 -->
-      <div class="block">
-        <table class="motivation-table">
-          <tr>
-            <th class="motivation-label">志望動機など</th>
-          </tr>
-          <tr>
-            <td class="motivation-value">
-              <span id="preview-motivation"></span>
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <!-- (8) 自己PR -->
-      <div class="block">
-        <table class="pr-table">
-          <tr>
-            <th class="pr-label">自己PRなど</th>
-          </tr>
-          <tr>
-            <td class="pr-value">
-              <span id="preview-pr"></span>
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <!-- (9) 本人希望 -->
-      <div class="block">
-        <table class="request-table">
-          <tr>
-            <th class="request-label">
-              本人希望（給与・職種・勤務時間・勤務地 等）
-            </th>
-          </tr>
-          <tr>
-            <td class="request-value">
-              <span id="preview-request"></span>
-            </td>
-          </tr>
-        </table>
-      </div>
-
-    </div>
-  </div>
-  `;
-}
-
-/************************************************************
- * 3) ページDOMを追加して表示
- ************************************************************/
-const pagesContainer = document.getElementById("resume-pages");
-
-/** 1ページ目を自動生成 */
-function createNewPageDOM() {
-  const pageEl = document.createElement("div");
-  pageEl.classList.add("resume-page");
-  pageEl.innerHTML = generateResumeTemplate(); // 文字列としてHTMLを流し込む
-  pagesContainer.appendChild(pageEl);
-  return pageEl;
-}
-
-// 最初の1ページ作成
-let currentPage = createNewPageDOM();
-
-/************************************************************
- * 4) 「本日の令和◯年」表示
- ************************************************************/
-function setTodayDate() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth() + 1;
-  const d = now.getDate();
-  const reiwa = y - 2018; // 2019年=令和元年
-
-  // テンプレートリテラルで文字列を作成
-  const todayStr = `令和 ${reiwa} 年 ${m} 月 ${d} 日現在`;
-
-  const todayDateEl = document.getElementById("preview-today-date");
-  if (todayDateEl) {
-    todayDateEl.textContent = todayStr;
+  if (openSummaryModalBtn && closeSummaryModalBtn && summaryModalOverlay) {
+    openSummaryModalBtn.addEventListener("click", () => {
+      summaryModalOverlay.style.display = "flex";
+    });
+    closeSummaryModalBtn.addEventListener("click", () => {
+      summaryModalOverlay.style.display = "none";
+    });
   }
-}
-setTodayDate();
 
-/************************************************************
- * 5) フォーム入力とプレビューの同期
- ************************************************************/
-function bindTextSync(inputSel, previewSel) {
-  const inputEl = document.querySelector(inputSel);
-  const prevEl = document.querySelector(previewSel);
-  if (!inputEl || !prevEl) return;
+  // 例文を使用するボタン (職務要約)
+  document.querySelectorAll(".use-summary-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const exNum = btn.getAttribute("data-example");
+      fillSummaryExample(exNum);
+      summaryModalOverlay.style.display = "none";
+    });
+  });
 
-  function sync() {
-    prevEl.textContent = inputEl.value;
-    splitPagesIfOverflow();
-  }
-  inputEl.addEventListener("input", sync);
-  sync(); // 初期反映
-}
+  // 「自己PRを自動生成」ボタン（モーダル内）
+  document.getElementById("generate-pr").addEventListener("click", async () => {
+    const bulletPoints = document
+      .getElementById("pr-bullet-points")
+      .value.trim();
+    if (!bulletPoints) {
+      alert("箇条書きの内容を入力してください。");
+      return;
+    }
 
-// ---- 各テキスト欄をプレビューに同期 ----
-bindTextSync("#input-name", "#preview-name");
-bindTextSync("#input-furigana", "#preview-furigana");
-bindTextSync("#input-postal-code", "#preview-postal-code");
-bindTextSync("#input-address-furigana", "#preview-address-furigana");
-bindTextSync("#input-address", "#preview-address");
-bindTextSync("#input-phone", "#preview-phone");
-bindTextSync("#input-email", "#preview-email");
-bindTextSync("#input-alt-postal-code", "#preview-alt-postal-code");
-bindTextSync("#input-alt-address-furigana", "#preview-alt-address-furigana");
-bindTextSync("#input-alt-address", "#preview-alt-address");
-bindTextSync("#input-alt-phone", "#preview-alt-phone");
-bindTextSync("#input-alt-email", "#preview-alt-email");
-bindTextSync("#input-motivation", "#preview-motivation");
-bindTextSync("#input-pr", "#preview-pr");
-bindTextSync("#input-request", "#preview-request");
+    const generatePrBtn = document.getElementById("generate-pr");
+    generatePrBtn.disabled = true;
+    generatePrBtn.textContent = "生成中...";
+    const spinner = document.createElement("span");
+    spinner.classList.add("spinner");
+    generatePrBtn.appendChild(spinner);
 
-// ---- 生年月日（年・月・日）を同期 ----
-const birthYear = document.getElementById("birth-year");
-const birthMonth = document.getElementById("birth-month");
-const birthDay = document.getElementById("birth-day");
-const prevBirthYear = document.getElementById("preview-birth-year");
-const prevBirthMonth = document.getElementById("preview-birth-month");
-const prevBirthDay = document.getElementById("preview-birth-day");
+    // 自己PR生成用 (Base64のまま)
+    const PR_WORKFLOW_ID = atob(
+      "MGIyMTFjNzgtZDQ1My00NjQwLWJlMjctMzNlNzg4NGZmYzUx"
+    );
+    const PR_API_KEY = atob("QmVhcmVyIGFwcC1ETmVBVzNhalh5TzVURFRMZDJrUm9IeFk=");
 
-function syncBirth() {
-  prevBirthYear.textContent = birthYear.value;
-  prevBirthMonth.textContent = birthMonth.value;
-  prevBirthDay.textContent = birthDay.value;
-  splitPagesIfOverflow();
-}
-[birthYear, birthMonth, birthDay].forEach((el) =>
-  el.addEventListener("input", syncBirth)
-);
+    try {
+      const requestBody = {
+        workflow_id: PR_WORKFLOW_ID,
+        inputs: {
+          text: bulletPoints,
+          other: "",
+        },
+        user: "guest_user",
+      };
 
-// ---- 年齢を同期 ----
-bindTextSync("#age", "#preview-age");
+      const response = await fetch("https://api.dify.ai/v1/workflows/run", {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: PR_API_KEY,
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-// ---- 性別を同期 ----
-bindTextSync("#gender", "#preview-gender");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          `Dify APIエラー: ${response.status} ${
+            response.statusText
+          } - ${JSON.stringify(errorData)}`
+        );
+      }
 
-// ---- 写真を同期 ----
-const photoInput = document.getElementById("input-photo");
-const previewPhoto = document.getElementById("preview-photo-img");
-photoInput.addEventListener("change", () => {
-  const file = photoInput.files[0];
-  if (!file) {
-    previewPhoto.src = "";
-    splitPagesIfOverflow();
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    previewPhoto.src = e.target.result;
-    splitPagesIfOverflow();
-  };
-  reader.readAsDataURL(file);
-});
+      const data = await response.json();
+      const generatedText = data?.data?.outputs?.text || "生成テキストなし";
 
-// ---- 生年月日selectに値を入れる（初期化）----
-const yearNow = new Date().getFullYear();
-function populateYears(select) {
-  for (let y = 1900; y <= yearNow; y++) {
-    const opt = document.createElement("option");
-    opt.value = y;
-    opt.textContent = y;
-    select.appendChild(opt);
-  }
-}
-function populateMonths(select) {
-  for (let i = 1; i <= 12; i++) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = i;
-    select.appendChild(opt);
-  }
-}
-populateYears(birthYear);
-populateMonths(birthMonth);
+      document.getElementById("input-pr").value = generatedText;
+      updatePreviewPages();
 
-for (let i = 1; i <= 31; i++) {
-  const opt = document.createElement("option");
-  opt.value = i;
-  opt.textContent = i;
-  birthDay.appendChild(opt);
-}
-const ageSelect = document.getElementById("age");
-for (let i = 0; i <= 100; i++) {
-  const opt = document.createElement("option");
-  opt.value = i;
-  opt.textContent = i;
-  ageSelect.appendChild(opt);
-}
-
-/************************************************************
- * 6) 学歴・職歴 (最大12行)
- ************************************************************/
-const eduContainer = document.getElementById("education-container");
-let currentEduRows = 1;
-const maxEduRows = 12;
-
-// 初期行(1行目)のDOM
-const defEduYear = eduContainer.querySelector(".edu-year");
-const defEduMonth = eduContainer.querySelector(".edu-month");
-const defEduWork = eduContainer.querySelector(".edu-work");
-
-// 行同期用関数
-function syncEduRow(leftYearEl, leftMonthEl, leftWorkEl, rowIndex) {
-  const previewYear = document.getElementById(`edu-preview-year-${rowIndex}`);
-  const previewMonth = document.getElementById(`edu-preview-month-${rowIndex}`);
-  const previewWork = document.getElementById(`edu-preview-work-${rowIndex}`);
-
-  function doSync() {
-    previewYear.textContent = leftYearEl.value;
-    previewMonth.textContent = leftMonthEl.value;
-    previewWork.textContent = leftWorkEl.value;
-    splitPagesIfOverflow();
-  }
-  leftYearEl.addEventListener("input", doSync);
-  leftMonthEl.addEventListener("input", doSync);
-  leftWorkEl.addEventListener("input", doSync);
-
-  doSync();
-}
-syncEduRow(defEduYear, defEduMonth, defEduWork, 1);
-
-// 学歴・職歴の年・月セレクトに値を入れる
-function populateYearMonth(selectYear, selectMonth) {
-  for (let y = 1900; y <= yearNow; y++) {
-    const opt = document.createElement("option");
-    opt.value = y;
-    opt.textContent = y;
-    selectYear.appendChild(opt);
-  }
-  for (let i = 1; i <= 12; i++) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = i;
-    selectMonth.appendChild(opt);
-  }
-}
-populateYearMonth(defEduYear, defEduMonth);
-
-// 「＋ 追加する」ボタン（学歴・職歴）
-document.getElementById("add-education-row").addEventListener("click", () => {
-  if (currentEduRows >= maxEduRows) {
-    alert("学歴・職歴は最大12行までです。");
-    return;
-  }
-  currentEduRows++;
-  const rowIndex = currentEduRows;
-
-  // 左側フォームに新しい行DOM
-  const row = document.createElement("div");
-  row.className = "row-container";
-  row.innerHTML = `
-    <div class="form-inline">
-      <select class="edu-year"><option value="">--</option></select>
-      <select class="edu-month"><option value="">--</option></select>
-      <input type="text" class="edu-work" placeholder="例：〇〇大学 卒業" />
-    </div>
-  `;
-  eduContainer.appendChild(row);
-
-  const newYear = row.querySelector(".edu-year");
-  const newMonth = row.querySelector(".edu-month");
-  const newWork = row.querySelector(".edu-work");
-  populateYearMonth(newYear, newMonth);
-
-  syncEduRow(newYear, newMonth, newWork, rowIndex);
-});
-
-// 「－ 削除」ボタン（学歴・職歴）
-document
-  .getElementById("remove-education-last")
-  .addEventListener("click", () => {
-    if (currentEduRows > 1) {
-      const rows = eduContainer.querySelectorAll(".row-container");
-      eduContainer.removeChild(rows[rows.length - 1]);
-
-      // 右側プレビューの該当行を空に
-      document.getElementById(
-        `edu-preview-year-${currentEduRows}`
-      ).textContent = "";
-      document.getElementById(
-        `edu-preview-month-${currentEduRows}`
-      ).textContent = "";
-      document.getElementById(
-        `edu-preview-work-${currentEduRows}`
-      ).textContent = "";
-
-      currentEduRows--;
-      splitPagesIfOverflow();
+      alert("自己PRを自動生成しました。");
+    } catch (error) {
+      console.error(error);
+      alert("自己PR生成エラー: " + error.message);
+    } finally {
+      generatePrBtn.removeChild(spinner);
+      generatePrBtn.disabled = false;
+      generatePrBtn.textContent = "自己PRを自動生成";
     }
   });
 
-/************************************************************
- * 7) 免許・資格 (最大6行)
- ************************************************************/
-const skillContainer = document.getElementById("skill-container");
-let currentSkillRows = 1;
-const maxSkillRows = 6;
-
-// 初期1行目
-const defLicenseYear = skillContainer.querySelector(".license-year");
-const defLicenseMonth = skillContainer.querySelector(".license-month");
-const defSkillHistory = skillContainer.querySelector(".skill-history");
-
-function syncSkillRow(yearEl, monthEl, histEl, rowIndex) {
-  const previewYear = document.getElementById(`skill-preview-year-${rowIndex}`);
-  const previewMonth = document.getElementById(
-    `skill-preview-month-${rowIndex}`
-  );
-  const previewHistory = document.getElementById(
-    `skill-preview-history-${rowIndex}`
-  );
-
-  function doSync() {
-    previewYear.textContent = yearEl.value;
-    previewMonth.textContent = monthEl.value;
-    previewHistory.textContent = histEl.value;
-    splitPagesIfOverflow();
-  }
-  yearEl.addEventListener("input", doSync);
-  monthEl.addEventListener("input", doSync);
-  histEl.addEventListener("input", doSync);
-  doSync();
-}
-syncSkillRow(defLicenseYear, defLicenseMonth, defSkillHistory, 1);
-
-// 年・月セレクトに値を入れる（免許・資格）
-function populateYearMonthSkill(selectYear, selectMonth) {
-  for (let y = 1900; y <= yearNow; y++) {
-    const opt = document.createElement("option");
-    opt.value = y;
-    opt.textContent = y;
-    selectYear.appendChild(opt);
-  }
-  for (let i = 1; i <= 12; i++) {
-    const opt = document.createElement("option");
-    opt.value = i;
-    opt.textContent = i;
-    selectMonth.appendChild(opt);
-  }
-}
-populateYearMonthSkill(defLicenseYear, defLicenseMonth);
-
-// 「＋ 追加する」ボタン（免許・資格）
-document.getElementById("add-skill-row").addEventListener("click", () => {
-  if (currentSkillRows >= maxSkillRows) {
-    alert("免許・資格は最大6行までです。");
-    return;
-  }
-  currentSkillRows++;
-  const rowIndex = currentSkillRows;
-
-  // 左側フォームに新しい行DOM
-  const row = document.createElement("div");
-  row.className = "row-container";
-  row.innerHTML = `
-    <div class="form-inline">
-      <select class="license-year"><option value="">--</option></select>
-      <select class="license-month"><option value="">--</option></select>
-      <input
-        type="text"
-        class="skill-history"
-        placeholder="例：英語検定2級"
-        style="text-align: left;"
-      />
-    </div>
-  `;
-  skillContainer.appendChild(row);
-
-  const yearEl = row.querySelector(".license-year");
-  const monthEl = row.querySelector(".license-month");
-  const histEl = row.querySelector(".skill-history");
-  populateYearMonthSkill(yearEl, monthEl);
-
-  syncSkillRow(yearEl, monthEl, histEl, rowIndex);
-});
-
-// 「－ 削除」ボタン（免許・資格）
-document.getElementById("remove-skill-last").addEventListener("click", () => {
-  if (currentSkillRows > 1) {
-    const rows = skillContainer.querySelectorAll(".row-container");
-    skillContainer.removeChild(rows[rows.length - 1]);
-
-    // 右側プレビュー該当行を空に
-    document.getElementById(
-      `skill-preview-year-${currentSkillRows}`
-    ).textContent = "";
-    document.getElementById(
-      `skill-preview-month-${currentSkillRows}`
-    ).textContent = "";
-    document.getElementById(
-      `skill-preview-history-${currentSkillRows}`
-    ).textContent = "";
-
-    currentSkillRows--;
-    splitPagesIfOverflow();
-  }
-});
-
-/************************************************************
- * 8) ページ溢れチェック → 溢れたら次ページへ
- ************************************************************/
-function splitPagesIfOverflow() {
-  let pages = pagesContainer.querySelectorAll(".resume-page");
-  for (let i = 0; i < pages.length; i++) {
-    const page = pages[i];
-    const content = page.querySelector(".resume-content");
-    if (!content) continue;
-
-    // オーバーフローしていれば末尾の .block を次ページへ
-    while (checkOverflow(page, content)) {
-      let nextPage = pages[i + 1];
-      if (!nextPage) {
-        nextPage = createBlankPage();
-        pages = pagesContainer.querySelectorAll(".resume-page");
+  // 一括生成(例)
+  const bulkBtn = document.getElementById("bulk-generate-btn");
+  if (bulkBtn) {
+    bulkBtn.addEventListener("click", async () => {
+      if (!selectedFile) {
+        alert("先にファイルを選択してください。");
+        return;
       }
-      const nextContent = nextPage.querySelector(".resume-content");
-      const blocks = content.querySelectorAll(".block");
-      if (!blocks.length) break;
-      const lastBlock = blocks[blocks.length - 1];
-      nextContent.insertBefore(lastBlock, nextContent.firstChild);
-    }
+      try {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        const response = await fetch(difyGasURL, {
+          method: "POST",
+          body: formData,
+        });
+        if (!response.ok) {
+          throw new Error("Dify用GASへの送信失敗: " + (await response.text()));
+        }
+        const result = await response.json();
+        console.log("[DEBUG] 一括生成 - difyGasURLからの結果 =", result);
+
+        if (result.text) {
+          const parsed = parseDifyText(result.text);
+          fillForm(parsed);
+        }
+        alert("解析結果をフォームに反映しました。");
+        updatePreviewPages();
+      } catch (err) {
+        console.error(err);
+        alert("一括生成エラー: " + err.message);
+      }
+    });
+  }
+
+  // ズームボタン
+  const zoomOutBtn = document.getElementById("zoom-out");
+  const zoomInBtn = document.getElementById("zoom-in");
+  if (zoomOutBtn && zoomInBtn) {
+    zoomOutBtn.addEventListener("click", () => {
+      if (currentZoom > MIN_ZOOM) {
+        currentZoom = Math.max(MIN_ZOOM, currentZoom - ZOOM_STEP);
+        applyZoom(currentZoom);
+      }
+    });
+    zoomInBtn.addEventListener("click", () => {
+      if (currentZoom < MAX_ZOOM) {
+        currentZoom = Math.min(MAX_ZOOM, currentZoom + ZOOM_STEP);
+        applyZoom(currentZoom);
+      }
+    });
+  }
+
+  // PDFダウンロードボタン & 同意チェック
+  const pdfBtn = document.getElementById("download-pdf");
+  const agreeCheckbox = document.getElementById("agree-terms");
+
+  // 最初はチェックされていない→PDFボタンを無効化
+  if (pdfBtn && agreeCheckbox) {
+    pdfBtn.disabled = true;
+
+    agreeCheckbox.addEventListener("change", () => {
+      pdfBtn.disabled = !agreeCheckbox.checked;
+    });
+
+    pdfBtn.addEventListener("click", async () => {
+      if (!agreeCheckbox.checked) {
+        alert("利用規約に同意する必要があります。");
+        return;
+      }
+      // ▼▼▼▼ ここから必須項目の未入力チェックを追加 ▼▼▼▼
+      // 必須項目のIDを配列に
+      const requiredFields = [
+        "input-name",
+        "input-tel",
+        "input-mail",
+        "input-summary",
+        "input-skill",
+        "input-pr",
+      ];
+      for (const fieldId of requiredFields) {
+        const value = document.getElementById(fieldId).value.trim();
+        if (!value) {
+          alert("必須項目が未入力です。すべての項目を入力してください。");
+          return;
+        }
+      }
+      // ▲▲▲▲ ここまで追加 ▲▲▲▲
+
+      // ダウンロード中の見た目変更
+      pdfBtn.disabled = true;
+      const originalText = pdfBtn.textContent;
+      pdfBtn.textContent = "ダウンロード中...";
+      const spinner = document.createElement("span");
+      spinner.classList.add("spinner");
+      pdfBtn.appendChild(spinner);
+
+      try {
+        await handleDownloadPDF();
+      } catch (e) {
+        console.error("PDFダウンロードエラー:", e);
+        alert("PDFダウンロードエラー: " + e.message);
+      } finally {
+        pdfBtn.removeChild(spinner);
+        pdfBtn.textContent = originalText;
+        pdfBtn.disabled = false;
+      }
+    });
+  }
+
+  console.log("[DEBUG] init done.");
+});
+
+/***************************************************
+ * 職務要約の例文を入力するヘルパー関数
+ ***************************************************/
+function fillSummaryExample(exNum) {
+  let text = "";
+  // exNumに応じて例文をセット
+  if (exNum === "1") {
+    text =
+      "○○業界で○○年間働き、新規顧客の開拓や既存顧客対応を一貫して担当しました。売上の安定化に加え、お客様の満足度向上に努め、リピート率向上を実現。社内外の打ち合わせで積極的に意見をまとめ、スムーズな連携を図りました。また、課題を洗い出して業務手順を見直し、生産性を高める取り組みを主導。今後はこの経験を基に、新たな提案力やチーム連携を強化し、企業の成長に貢献していきたいと考えています。";
+  } else if (exNum === "2") {
+    text =
+      "○○業界で○○年間、販売促進や顧客サポートに携わり、より分かりやすい商品説明や素早い問い合わせ対応を実施しました。お客様の要望を拾い上げることで満足度向上を図ると同時に、定期的な情報発信によってリピート購入を促進。社内ではスタッフ教育にも注力し、サービスの質とチーム力の向上を目指しました。今後は培ったコミュニケーション力をさらに活かし、より幅広い役割に貢献していきたいと思っています。";
+  } else if (exNum === "3") {
+    text =
+      "○○企業にて事務サポートや社内調整を行い、円滑な業務運営のための環境づくりを担当しました。各部門からの問い合わせに素早く対応し、必要な資料作成やスケジュール管理を実施。効率的なファイリング方法を提案するなど、日々の作業改善にも取り組みました。会議やミーティングでは意見をまとめ、関係者間の情報共有を推進。今後も身につけた調整力を活かし、より一層の組織サポートに貢献していきたいです。";
+  } else if (exNum === "4") {
+    text =
+      "○○企業の経理部門で月次・年次決算を担当し、正確な数値管理とスピーディなレポート提出を行いました。経費の削減策を提案し、適切なコスト管理の仕組みを整備したことで、部門全体の予算達成に寄与。さらに、社内システムのアップデートにあわせた手順書の整備やトラブル対応を担い、業務の滞りを防止しました。今後は培った数値分析力と改善意識を活かし、○○企業のさらなる発展を支えていきたいと考えています。";
+  } else if (exNum === "5") {
+    text =
+      "○○事業所で人事・総務に携わり、採用計画の立案からスタッフの勤務状況の把握まで幅広く担当しました。応募者とのやり取りや面接調整を丁寧に行い、適正な人材確保とスムーズな入社手続きを実現。新入社員の研修プログラムを整備し、早期戦力化にも貢献しました。併せて職場環境の整備や福利厚生の見直しを進め、社員が働きやすい仕組みを検討。これらの経験を通じ、企業と人材の成長を後押ししていきたいと考えています。";
+  }
+
+  const summaryEl = document.getElementById("input-summary");
+  if (summaryEl) {
+    summaryEl.value = text;
+    updatePreviewPages();
   }
 }
 
-function createBlankPage() {
-  const pageEl = document.createElement("div");
-  pageEl.classList.add("resume-page");
-  pageEl.innerHTML = `
-    <div class="resume-preview">
-      <div class="resume-content"></div>
-    </div>
-  `;
-  pagesContainer.appendChild(pageEl);
-  return pageEl;
+/***************************************************
+ * ズーム
+ ***************************************************/
+function applyZoom(scale) {
+  const wrap = document.getElementById("resumePages");
+  wrap.style.transform = `scale(${scale})`;
 }
 
-function checkOverflow(pageEl, contentEl) {
-  return contentEl.scrollHeight > pageEl.clientHeight;
-}
-
-/************************************************************
- * チェックボックスでPDF保存ボタンの状態を切り替える
- ************************************************************/
-const pdfSaveBtn = document.getElementById("pdf-save-btn");
-const agreeTerms = document.getElementById("agree-terms");
-
-// チェック時/非チェック時にボタンのdisableと色を切り替える関数
-function updatePdfButtonState() {
-  if (agreeTerms.checked) {
-    pdfSaveBtn.disabled = false;
-    pdfSaveBtn.style.background = "#2ecc71"; // 通常の緑色
-    pdfSaveBtn.style.cursor = "pointer";
-  } else {
-    pdfSaveBtn.disabled = true;
-    pdfSaveBtn.style.background = "#ccc";
-    pdfSaveBtn.style.cursor = "not-allowed";
-  }
-}
-agreeTerms.addEventListener("change", updatePdfButtonState);
-updatePdfButtonState();
-
-/************************************************************
- * 9) PDF保存ボタン
- ************************************************************/
-pdfSaveBtn.addEventListener("click", async () => {
-  if (!agreeTerms.checked) {
-    alert("利用規約に同意する必要があります。");
-    return;
-  }
-
-  // ▼ ボタンを押したことを視覚的に示すための処理
-  // 1) ボタン無効化
-  pdfSaveBtn.disabled = true;
-  // 2) 元のテキストを保存し、"生成中..."に変更
-  const originalText = pdfSaveBtn.textContent;
-  pdfSaveBtn.textContent = "生成中...";
-
-  // 3) スピナー要素を作成してボタン内に挿入
-  const spinnerEl = document.createElement("span");
-  spinnerEl.classList.add("spinner"); // 既存CSSの.spinnerを利用
-  pdfSaveBtn.appendChild(spinnerEl);
-
-  // ページ溢れチェック
-  splitPagesIfOverflow();
-
-  // 送信例データ
-  const sendData = {
-    createdDate: new Date().toLocaleString(),
-    name: document.getElementById("input-name").value,
-    phone: document.getElementById("input-phone").value,
-    email: document.getElementById("input-email").value,
-    gender: document.getElementById("gender").value,
-    age: document.getElementById("age").value,
-    address: document.getElementById("input-address").value,
+/***************************************************
+ * parseDifyText(text)
+ * ここで**1本のテキスト**を正規表現などで解析
+ ***************************************************/
+function parseDifyText(allText) {
+  const data = {
+    name: "",
+    tel: "",
+    mail: "",
+    summary: "",
+    careers: [],
+    licenses: [],
+    languages: [],
+    skill: "",
+    pr: "",
   };
+  const text = allText.trim();
 
-  // GASへ送信（不要なら削除OK）
+  // 以下はサンプルのパース例
+  const nameMatch = text.match(/【氏名】:\s*(.+)/);
+  if (nameMatch) data.name = nameMatch[1].trim();
+
+  const telMatch = text.match(/【電話】:\s*(.+)/);
+  if (telMatch) data.tel = telMatch[1].trim();
+
+  const mailMatch = text.match(/【メール】:\s*(.+)/);
+  if (mailMatch) data.mail = mailMatch[1].trim();
+
+  const summaryMatch = text.match(/\*\*職務要約\*\*([\s\S]*?)(?=\*\*|$)/);
+  if (summaryMatch) {
+    data.summary = summaryMatch[1].trim().replace(/^(\r?\n)+/, "");
+  }
+
+  const skillMatch = text.match(
+    /\*\*活かせる経験・知識・技術\*\*([\s\S]*?)(?=\*\*|$)/
+  );
+  if (skillMatch) {
+    data.skill = skillMatch[1].trim();
+  }
+
+  const prMatch = text.match(/\*\*自己PR\*\*([\s\S]*?$)/);
+  if (prMatch) {
+    const lines = prMatch[1].split("\n").map((s) => s.trim());
+    let prText = "";
+    lines.forEach((line) => {
+      const pm = line.match(/【自己PR】:\s*(.*)/);
+      if (pm) {
+        prText = pm[1].trim();
+      }
+    });
+    if (!prText) prText = prMatch[1].trim();
+    data.pr = prText;
+  }
+
+  const careersSection = text.match(/\*\*職務経歴\*\*([\s\S]*?)(?=\n\*\*|$)/);
+  if (careersSection) {
+    const cSec = careersSection[1].trim();
+    let parts = cSec.split(/【会社名】:/);
+    parts.shift();
+    parts.forEach((cp) => {
+      const lines = cp.split("\n").map((s) => s.trim());
+      const company = lines[0] || "";
+      let period = "";
+      let employment = "";
+      let position = "";
+      let business = "";
+      let achievement = "";
+      let empcount = "";
+      let capital = "";
+      let market = "";
+      let duty = "";
+
+      lines.forEach((line) => {
+        const pm = line.match(/【期間】:\s*(.*)/);
+        if (pm) period = pm[1].trim();
+        const em = line.match(/【雇用形態】:\s*(.*)/);
+        if (em) employment = em[1].trim();
+        const posm = line.match(/【役職】:\s*(.*)/);
+        if (posm) position = posm[1].trim();
+        const bm = line.match(/【事業内容】:\s*(.*)/);
+        if (bm) business = bm[1].trim();
+        const am = line.match(/【実績】:\s*(.*)/);
+        if (am) achievement = am[1].trim();
+        const ec = line.match(/【従業員数】:\s*(.*)/);
+        if (ec) empcount = ec[1].trim();
+        const cm = line.match(/【資本金】:\s*(.*)/);
+        if (cm) capital = cm[1].trim();
+        const mm = line.match(/【株式会社】:\s*(.*)/);
+        if (mm) market = mm[1].trim();
+        const dm = line.match(/【業務内容】:\s*(.*)/);
+        if (dm) duty = dm[1].trim();
+      });
+
+      data.careers.push({
+        period,
+        company,
+        employment,
+        position,
+        business,
+        duty,
+        achievement,
+        empcount,
+        capital,
+        market,
+      });
+    });
+  }
+
+  const licenseSection = text.match(/\*\*免許・資格\*\*([\s\S]*?)(?=\n\*\*|$)/);
+  if (licenseSection) {
+    const block = licenseSection[1].trim();
+    let parts = block.split(/【取得年】:/);
+    parts.shift();
+    parts.forEach((lp) => {
+      const lines = lp.split("\n").map((s) => s.trim());
+      let year = lines[0] || "";
+      let month = "";
+      let name = "";
+      lines.forEach((line) => {
+        const mo = line.match(/【取得月】：\s*(.*)/);
+        if (mo) month = mo[1].trim();
+        const nm = line.match(/【免許・資格名】:\s*(.*)/);
+        if (nm) name = nm[1].trim();
+      });
+      data.licenses.push({ year, month, name });
+    });
+  }
+
+  const langSection = text.match(/\*\*語学\*\*([\s\S]*?)(?=\n\*\*|$)/);
+  if (langSection) {
+    const lines = langSection[1].split("\n").map((s) => s.trim());
+    let langVal = "";
+    let levelVal = "";
+    lines.forEach((line) => {
+      const lm = line.match(/【語学名】:\s*(.*)/);
+      if (lm) langVal = lm[1].trim();
+      const lv = line.match(/【語学レベル】:\s*(.*)/);
+      if (lv) levelVal = lv[1].trim();
+    });
+    data.languages.push({ lang: langVal, level: levelVal });
+  }
+
+  console.log("[DEBUG] parseDifyText =>", data);
+  return data;
+}
+
+/***************************************************
+ * fillForm(parsed)
+ ***************************************************/
+function fillForm(parsed) {
+  if (parsed.name) document.getElementById("input-name").value = parsed.name;
+  if (parsed.tel) document.getElementById("input-tel").value = parsed.tel;
+  if (parsed.mail) document.getElementById("input-mail").value = parsed.mail;
+
+  if (parsed.summary) {
+    document.getElementById("input-summary").value = parsed.summary;
+  }
+  if (parsed.skill) {
+    document.getElementById("input-skill").value = parsed.skill;
+  }
+  if (parsed.pr) {
+    document.getElementById("input-pr").value = parsed.pr;
+  }
+
+  clearCareerForm();
+  if (parsed.careers && Array.isArray(parsed.careers)) {
+    parsed.careers.forEach((c, idx) => {
+      if (idx === 0) {
+        fillCareerRow(1, c);
+      } else {
+        addCareerRow();
+        fillCareerRow(careerCount, c);
+      }
+    });
+  }
+
+  clearLicenseForm();
+  if (parsed.licenses && Array.isArray(parsed.licenses)) {
+    parsed.licenses.forEach((lic, idx) => {
+      if (idx === 0) {
+        fillLicenseRow(1, lic);
+      } else {
+        addLicenseRow();
+        fillLicenseRow(licenseCount, lic);
+      }
+    });
+  }
+
+  clearLangForm();
+  if (parsed.languages && Array.isArray(parsed.languages)) {
+    parsed.languages.forEach((lg, idx) => {
+      if (idx === 0) {
+        fillLangRow(1, lg);
+      } else {
+        addLangRow();
+        fillLangRow(langCount, lg);
+      }
+    });
+  }
+}
+
+function clearCareerForm() {
+  careerCount = 1;
+  const container = document.getElementById("career-container");
+  while (container.children.length > 1) {
+    container.removeChild(container.lastElementChild);
+  }
+  fillCareerRow(1, {
+    period: "",
+    company: "",
+    employment: "",
+    position: "",
+    business: "",
+    duty: "",
+    achievement: "",
+    empcount: "",
+    capital: "",
+    market: "",
+  });
+}
+function fillCareerRow(idx, c) {
+  document.getElementById(`career${idx}-period`).value = c.period || "";
+  document.getElementById(`career${idx}-company`).value = c.company || "";
+  document.getElementById(`career${idx}-employment`).value = c.employment || "";
+  document.getElementById(`career${idx}-position`).value = c.position || "";
+  document.getElementById(`career${idx}-business`).value = c.business || "";
+  document.getElementById(`career${idx}-duty`).value = c.duty || "";
+  document.getElementById(`career${idx}-achievement`).value =
+    c.achievement || "";
+  document.getElementById(`career${idx}-empcount`).value = c.empcount || "";
+  document.getElementById(`career${idx}-capital`).value = c.capital || "";
+  document.getElementById(`career${idx}-market`).value = c.market || "";
+}
+function addCareerRow() {
+  const addBtn = document.getElementById("add-career-row");
+  addBtn.click();
+}
+
+function clearLicenseForm() {
+  licenseCount = 1;
+  const container = document.getElementById("license-container");
+  while (container.children.length > 1) {
+    container.removeChild(container.lastElementChild);
+  }
+  fillLicenseRow(1, { year: "", month: "", name: "" });
+}
+function fillLicenseRow(idx, lic) {
+  document.getElementById(`license${idx}-year`).value = lic.year || "";
+  document.getElementById(`license${idx}-month`).value = lic.month || "";
+  document.getElementById(`license${idx}-name`).value = lic.name || "";
+}
+function addLicenseRow() {
+  const addBtn = document.getElementById("add-license-row");
+  addBtn.click();
+}
+
+function clearLangForm() {
+  langCount = 1;
+  const container = document.getElementById("lang-container");
+  while (container.children.length > 1) {
+    container.removeChild(container.lastElementChild);
+  }
+  fillLangRow(1, { lang: "", level: "" });
+}
+function fillLangRow(idx, l) {
+  document.getElementById(`lang${idx}-lang`).value = l.lang || "";
+  document.getElementById(`lang${idx}-level`).value = l.level || "";
+}
+function addLangRow() {
+  const addBtn = document.getElementById("add-lang-row");
+  addBtn.click();
+}
+
+/***************************************************
+ * (D) フォームとプレビューのバインディング
+ ***************************************************/
+function setupBindings() {
+  function bindText(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener("input", updatePreviewPages);
+  }
+
+  bindText("input-name");
+  bindText("input-tel");
+  bindText("input-mail");
+
+  bindText("input-summary");
+  bindText("input-skill");
+  bindText("input-pr");
+
+  bindText("career1-period");
+  bindText("career1-company");
+  bindText("career1-employment");
+  bindText("career1-position");
+  bindText("career1-business");
+  bindText("career1-duty");
+  bindText("career1-achievement");
+  bindText("career1-empcount");
+  bindText("career1-capital");
+  bindText("career1-market");
+
+  bindText("license1-year");
+  bindText("license1-month");
+  bindText("license1-name");
+
+  bindText("lang1-lang");
+  bindText("lang1-level");
+
+  setupAddRemoveCareer();
+  setupAddRemoveLicense();
+  setupAddRemoveLang();
+
+  const summaryEl = document.getElementById("input-summary");
+  if (summaryEl) {
+    summaryEl.addEventListener("input", () => {
+      const len = summaryEl.value.length;
+      document.getElementById("char-counter").textContent = len + " / 300字";
+    });
+  }
+}
+
+function setupAddRemoveCareer() {
+  const addBtn = document.getElementById("add-career-row");
+  const removeBtn = document.getElementById("remove-career-row");
+  const container = document.getElementById("career-container");
+  const firstBlock = document.getElementById("career-first");
+
+  if (addBtn) {
+    addBtn.addEventListener("click", () => {
+      careerCount++;
+      const clone = firstBlock.cloneNode(true);
+      clone.querySelectorAll('[id^="career1-"]').forEach((elem) => {
+        const newId = elem.id.replace("career1-", `career${careerCount}-`);
+        elem.id = newId;
+        elem.value = "";
+        elem.addEventListener("input", updatePreviewPages);
+      });
+
+      let wrapper = document.createElement("div");
+      wrapper.className = "sub-section";
+      wrapper.style.borderTop = "1px solid #000";
+      wrapper.style.marginTop = "10px";
+      wrapper.style.paddingTop = "10px";
+      wrapper.style.marginBottom = "10px";
+      wrapper.appendChild(clone);
+      container.appendChild(wrapper);
+
+      removeTableTopLine(wrapper);
+      updatePreviewPages();
+    });
+  }
+
+  if (removeBtn) {
+    removeBtn.addEventListener("click", () => {
+      if (container.children.length > 1) {
+        container.removeChild(container.lastElementChild);
+        careerCount--;
+      } else {
+        firstBlock.querySelectorAll('[id^="career1-"]').forEach((elem) => {
+          elem.value = "";
+        });
+      }
+      updatePreviewPages();
+    });
+  }
+}
+
+function setupAddRemoveLicense() {
+  const addBtn = document.getElementById("add-license-row");
+  const removeBtn = document.getElementById("remove-license-row");
+  const licenseContainer = document.getElementById("license-container");
+  const firstLicense = document.getElementById("license-first");
+
+  if (addBtn) {
+    addBtn.addEventListener("click", () => {
+      licenseCount++;
+      const clone = firstLicense.cloneNode(true);
+      clone.querySelectorAll('[id^="license1-"]').forEach((elem) => {
+        let newId = elem.id.replace("license1-", `license${licenseCount}-`);
+        elem.id = newId;
+        elem.value = "";
+        elem.addEventListener("input", updatePreviewPages);
+      });
+      let wrapper = document.createElement("div");
+      wrapper.className = "sub-section";
+      wrapper.style.borderTop = "1px solid #000";
+      wrapper.style.marginTop = "10px";
+      wrapper.style.paddingTop = "10px";
+      wrapper.style.marginBottom = "10px";
+      wrapper.appendChild(clone);
+      licenseContainer.appendChild(wrapper);
+
+      removeTableTopLine(wrapper);
+      updatePreviewPages();
+    });
+  }
+  if (removeBtn) {
+    removeBtn.addEventListener("click", () => {
+      if (licenseContainer.children.length > 1) {
+        licenseContainer.removeChild(licenseContainer.lastElementChild);
+        licenseCount--;
+      } else {
+        firstLicense.querySelectorAll('[id^="license1-"]').forEach((elem) => {
+          elem.value = "";
+        });
+      }
+      updatePreviewPages();
+    });
+  }
+}
+
+function setupAddRemoveLang() {
+  const addBtn = document.getElementById("add-lang-row");
+  const removeBtn = document.getElementById("remove-lang-row");
+  const langContainer = document.getElementById("lang-container");
+  const firstLang = document.getElementById("lang-first");
+
+  if (!addBtn || !removeBtn || !langContainer || !firstLang) return;
+
+  addBtn.addEventListener("click", () => {
+    langCount++;
+    let clone = firstLang.cloneNode(true);
+    clone.querySelectorAll('[id^="lang1-"]').forEach((elem) => {
+      let newId = elem.id.replace("lang1-", `lang${langCount}-`);
+      elem.id = newId;
+      elem.value = "";
+      elem.addEventListener("input", updatePreviewPages);
+    });
+    let wrapper = document.createElement("div");
+    wrapper.className = "sub-section";
+    wrapper.style.borderTop = "1px solid #000";
+    wrapper.style.marginTop = "10px";
+    wrapper.style.paddingTop = "10px";
+    wrapper.style.marginBottom = "10px";
+    wrapper.appendChild(clone);
+    langContainer.appendChild(wrapper);
+
+    removeTableTopLine(wrapper);
+    updatePreviewPages();
+  });
+
+  removeBtn.addEventListener("click", () => {
+    if (langContainer.children.length > 1) {
+      langContainer.removeChild(langContainer.lastElementChild);
+      langCount--;
+    } else {
+      firstLang.querySelectorAll('[id^="lang1-"]').forEach((elem) => {
+        elem.value = "";
+      });
+    }
+    updatePreviewPages();
+  });
+}
+
+function removeTableTopLine(wrapperElem) {
+  const tables = wrapperElem.querySelectorAll("table");
+  tables.forEach((table) => {
+    table.style.borderTop = "none";
+  });
+}
+
+/***************************************************
+ * (E) プレビュー更新
+ ***************************************************/
+function updatePreviewPages() {
+  const wrap = document.getElementById("resumePages");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+
+  function createNewPage() {
+    const page = document.createElement("div");
+    page.className = "resume-page";
+    wrap.appendChild(page);
+    return page;
+  }
+
+  let currentPage = createNewPage();
+
+  // タイトル & 基本情報
+  currentPage.appendChild(makeTitleBlock());
+
+  // 職務要約
+  currentPage.appendChild(makeSectionTitle("職務要約"));
+  {
+    const text = docVal("input-summary");
+    const summaryBlock = document.createElement("div");
+    summaryBlock.classList.add("summary-block");
+    summaryBlock.textContent = text;
+    if (isOverflowAfterAppend(currentPage, summaryBlock)) {
+      currentPage = createNewPage();
+      currentPage.appendChild(makeSectionTitle("職務要約"));
+    }
+    currentPage.appendChild(summaryBlock);
+  }
+
+  // 職歴
+  currentPage.appendChild(makeSectionTitle("職歴"));
+  for (let i = 1; i <= careerCount; i++) {
+    const block = makeCareerBlock(i);
+    if (isOverflowAfterAppend(currentPage, block)) {
+      currentPage = createNewPage();
+      currentPage.appendChild(makeSectionTitle("職歴"));
+    }
+    currentPage.appendChild(block);
+  }
+
+  // 免許・資格
+  currentPage.appendChild(makeSectionTitle("免許・資格"));
+  for (let i = 1; i <= licenseCount; i++) {
+    const table = makeLicenseTable(i);
+    table.classList.add("license-table");
+    if (isOverflowAfterAppend(currentPage, table)) {
+      currentPage = createNewPage();
+      currentPage.appendChild(makeSectionTitle("免許・資格"));
+    }
+    currentPage.appendChild(table);
+  }
+
+  // 語学
+  currentPage.appendChild(makeSectionTitle("語学"));
+  for (let i = 1; i <= langCount; i++) {
+    const table = makeLangTable(i);
+    table.classList.add("lang-table");
+    if (isOverflowAfterAppend(currentPage, table)) {
+      currentPage = createNewPage();
+      currentPage.appendChild(makeSectionTitle("語学"));
+    }
+    currentPage.appendChild(table);
+  }
+
+  // 活かせる経験・知識・技術
+  currentPage.appendChild(makeSectionTitle("活かせる経験・知識・技術"));
+  {
+    const text = docVal("input-skill");
+    const block = document.createElement("div");
+    block.style.whiteSpace = "pre-wrap";
+    block.style.wordWrap = "break-word";
+    block.textContent = text;
+    if (isOverflowAfterAppend(currentPage, block)) {
+      currentPage = createNewPage();
+      currentPage.appendChild(makeSectionTitle("活かせる経験・知識・技術"));
+    }
+    currentPage.appendChild(block);
+  }
+
+  // 自己PR
+  currentPage.appendChild(makeSectionTitle("自己PR"));
+  {
+    const text = docVal("input-pr");
+    const block = document.createElement("div");
+    block.style.whiteSpace = "pre-wrap";
+    block.style.wordWrap = "break-word";
+    block.textContent = text;
+    if (isOverflowAfterAppend(currentPage, block)) {
+      currentPage = createNewPage();
+      currentPage.appendChild(makeSectionTitle("自己PR"));
+    }
+    currentPage.appendChild(block);
+  }
+}
+
+function makeTitleBlock() {
+  const nameVal = esc(docVal("input-name"));
+  const telVal = esc(docVal("input-tel"));
+  const mailVal = esc(docVal("input-mail"));
+  const dateStr = new Date().toLocaleDateString("ja-JP");
+
+  const container = document.createElement("div");
+  const titleEl = document.createElement("div");
+  titleEl.classList.add("preview-title");
+  titleEl.textContent = "職務経歴書";
+  container.appendChild(titleEl);
+
+  const infoEl = document.createElement("div");
+  infoEl.classList.add("top-right");
+  infoEl.innerHTML = `
+          <div>作成日: ${dateStr}</div>
+          <div>名前: ${nameVal}</div>
+          <div>Tel: ${telVal}</div>
+          <div>Mail: ${mailVal}</div>
+        `;
+  container.appendChild(infoEl);
+
+  return container;
+}
+function makeSectionTitle(txt) {
+  const d = document.createElement("div");
+  d.className = "preview-section-title";
+  d.textContent = txt;
+  return d;
+}
+function makeCareerBlock(i) {
+  const period = docVal(`career${i}-period`);
+  const company = docVal(`career${i}-company`);
+  const employment = docVal(`career${i}-employment`);
+  const position = docVal(`career${i}-position`);
+  const business = docVal(`career${i}-business`);
+  const duty = docVal(`career${i}-duty`);
+  const achievement = docVal(`career${i}-achievement`);
+  const empcount = docVal(`career${i}-empcount`);
+  const capital = docVal(`career${i}-capital`);
+  const market = docVal(`career${i}-market`);
+
+  const wrapper = document.createElement("div");
+  wrapper.style.marginBottom = "16px";
+
+  const infoDiv = document.createElement("div");
+  infoDiv.style.marginBottom = "0px";
+  infoDiv.innerHTML = `
+          会社名： ${esc(company)}<br>
+          事業内容： ${esc(business)}<br>
+          資本金： ${esc(capital)}　従業員数： ${esc(
+    empcount
+  )}　株式市場： ${esc(market)}
+        `;
+  wrapper.appendChild(infoDiv);
+
+  const table = document.createElement("table");
+  table.classList.add("career-format-table");
+  table.innerHTML = `
+          <thead>
+            <tr>
+              <th style="width:25%">期間</th>
+              <th style="width:75%">業務内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                ${esc(period)}
+              </td>
+              <td>
+                雇用形態： ${esc(employment)}<br>
+                役職： ${esc(position)}<br>
+                実績： ${esc(achievement)}<br>
+                業務内容： ${esc(duty)}
+              </td>
+            </tr>
+          </tbody>
+        `;
+  wrapper.appendChild(table);
+
+  return wrapper;
+}
+function makeLicenseTable(i) {
+  const y = docVal(`license${i}-year`);
+  const mo = docVal(`license${i}-month`);
+  const nm = docVal(`license${i}-name`);
+  const table = document.createElement("table");
+  table.innerHTML = `
+          <tr>
+            <th>年</th>
+            <td style="width:25mm;">${esc(y)}</td>
+            <th>月</th>
+            <td style="width:25mm;">${esc(mo)}</td>
+            <th colspan="2" style="text-align:center;">免許・資格名</th>
+            <td colspan="3">${esc(nm)}</td>
+          </tr>
+        `;
+  return table;
+}
+function makeLangTable(i) {
+  const l = docVal(`lang${i}-lang`);
+  const lv = docVal(`lang${i}-level`);
+  const table = document.createElement("table");
+  table.innerHTML = `
+          <tr>
+            <th>語学</th>
+            <td>${esc(l)}</td>
+            <th>レベル</th>
+            <td>${esc(lv)}</td>
+          </tr>
+        `;
+  return table;
+}
+function docVal(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : "";
+}
+function esc(str) {
+  return (str || "").replace(/[&<>"']/g, (s) => {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    }[s];
+  });
+}
+function isOverflowAfterAppend(pageElem, blockElem) {
+  pageElem.appendChild(blockElem);
+  const isOverflow = pageElem.scrollHeight > pageElem.clientHeight;
+  pageElem.removeChild(blockElem);
+  return isOverflow;
+}
+
+/***************************************************
+ * (F) PDFダウンロード
+ ***************************************************/
+async function handleDownloadPDF() {
   try {
+    // ▼ 既存コード：スプレッドシート更新用GASに送信
+    const sendData = {
+      createdDate: new Date().toLocaleString(),
+      name: document.getElementById("input-name").value,
+      tel: document.getElementById("input-tel").value,
+      mail: document.getElementById("input-mail").value,
+    };
     const response = await fetch(scriptURL, {
       method: "POST",
       headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(sendData),
     });
-    const resultText = await response.text();
-    console.log("GAS送信結果:", resultText);
-    alert("履歴書が完成しました: " + resultText);
-  } catch (e) {
-    console.error("GAS送信エラー:", e);
-    alert("エラーが発生しました");
-  }
+    if (!response.ok) {
+      console.error("GAS送信エラー: status =", response.status);
+    } else {
+      const resultText = await response.text();
+      console.log("GAS応答 =", resultText);
+    }
 
-  // PDF作成
-  try {
+    // PDF作成
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF("portrait", "pt", "a4");
-    const pageElems = document.querySelectorAll(".resume-page");
+    const pages = document.querySelectorAll(".resume-page");
 
-    for (let i = 0; i < pageElems.length; i++) {
+    for (let i = 0; i < pages.length; i++) {
       if (i > 0) pdf.addPage();
-
-      // html2canvasでページ全体を画像化
-      const canvas = await html2canvas(pageElems[i], { scale: 2 });
+      const canvas = await html2canvas(pages[i], { scale: 2 });
       const imgData = canvas.toDataURL("image/jpeg", 1.0);
 
-      // PDF内部の寸法に合わせて画像を描画
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const imgWidthPx = canvas.width;
@@ -702,239 +1077,12 @@ pdfSaveBtn.addEventListener("click", async () => {
       pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, imgHeightInPdf);
     }
 
-    pdf.save("履歴書.pdf");
-  } catch (error) {
-    console.error("PDF生成エラー:", error);
-    alert("PDF生成中にエラーが発生しました");
-  } finally {
-    // ▼ 処理が終わったらボタンを元に戻す
-    pdfSaveBtn.removeChild(spinnerEl);
-    pdfSaveBtn.textContent = originalText;
-    pdfSaveBtn.disabled = false;
+    pdf.save("職務経歴書.pdf");
+    alert("PDFダウンロードが開始されました！");
+    console.log("[DEBUG] PDF download complete.");
+  } catch (e) {
+    console.error("PDF生成またはGAS送信エラー:", e);
+    alert("エラー: " + e.message);
   }
-
-  // ▼ PDF保存後にモーダルを表示する（追加部分）
-  const postPdfModal = document.getElementById("post-pdf-modal-overlay");
-  if (postPdfModal) {
-    postPdfModal.style.display = "flex"; // モーダルを表示
-  }
-});
-
-/************************************************************
- * PDFダウンロード後のモーダル「はい/いいえ」ボタン
- ************************************************************/
-// 「はい」→ syokumu.html へ遷移
-const postPdfYesBtn = document.getElementById("post-pdf-yes-btn");
-if (postPdfYesBtn) {
-  postPdfYesBtn.addEventListener("click", () => {
-    window.location.href = "syokumu.html";
-  });
 }
-
-// 「いいえ」→ モーダル閉じる
-const postPdfNoBtn = document.getElementById("post-pdf-no-btn");
-if (postPdfNoBtn) {
-  postPdfNoBtn.addEventListener("click", () => {
-    const postPdfModal = document.getElementById("post-pdf-modal-overlay");
-    if (postPdfModal) {
-      postPdfModal.style.display = "none";
-    }
-  });
-}
-
-/************************************************************
- * 志望動機 (モーダル) の自動生成ロジック
- ************************************************************/
-const openMotivationModalBtn = document.getElementById("open-motivation-modal");
-const closeMotivationModalBtn = document.getElementById(
-  "close-motivation-modal"
-);
-const motivationModalOverlay = document.getElementById(
-  "motivation-modal-overlay"
-);
-const bulletPointsInput = document.getElementById("motivation-bullet-points");
-const generateButton = document.getElementById("generate-motivation");
-const motivationInput = document.getElementById("input-motivation");
-
-// モーダル開閉
-openMotivationModalBtn.addEventListener("click", () => {
-  motivationModalOverlay.style.display = "flex";
-});
-closeMotivationModalBtn.addEventListener("click", () => {
-  motivationModalOverlay.style.display = "none";
-});
-
-// 志望動機用ワークフローID・APIキー（例）
-const MOTIVATION_WORKFLOW_ID = "07d33ea3-4e66-4924-9953-aa333df723f5";
-const MOTIVATION_API_KEY = "Bearer app-9RoCGLstEdkBeg591WYtlLu3";
-
-generateButton.addEventListener("click", async () => {
-  const bulletPoints = bulletPointsInput.value.trim();
-  if (!bulletPoints) {
-    alert("箇条書きの内容を入力してください。");
-    return;
-  }
-
-  // スピナーを付けて生成中状態に
-  generateButton.disabled = true;
-  generateButton.textContent = "生成中...";
-  const spinner = document.createElement("span");
-  spinner.classList.add("spinner");
-  generateButton.appendChild(spinner);
-
-  try {
-    const requestBody = {
-      workflow_id: MOTIVATION_WORKFLOW_ID,
-      inputs: { text: bulletPoints },
-      user: "guest_user",
-    };
-
-    const response = await fetch("https://api.dify.ai/v1/workflows/run", {
-      method: "POST",
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: MOTIVATION_API_KEY,
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        `Dify APIエラー: ${response.status} ${
-          response.statusText
-        } - ${JSON.stringify(errorData)}`
-      );
-    }
-
-    const data = await response.json();
-    console.log("志望動機レスポンス:", data);
-    const generatedText = data?.data?.outputs?.text || "生成テキストなし";
-
-    // テキストエリアに反映
-    motivationInput.value = generatedText;
-    // プレビュー更新
-    motivationInput.dispatchEvent(new Event("input"));
-
-    alert("志望動機を自動生成しました。");
-  } catch (error) {
-    console.error(error);
-    alert("エラーが発生しました(志望動機): " + error.message);
-  } finally {
-    // スピナー解除
-    generateButton.removeChild(spinner);
-    generateButton.disabled = false;
-    generateButton.textContent = "志望動機を自動生成";
-  }
-});
-
-/************************************************************
- * 自己PR (モーダル) の自動生成ロジック
- ************************************************************/
-const openPrModalBtn = document.getElementById("open-pr-modal");
-const closePrModalBtn = document.getElementById("close-pr-modal");
-const prModalOverlay = document.getElementById("pr-modal-overlay");
-const prBulletPointsInput = document.getElementById("pr-bullet-points");
-const generatePrButton = document.getElementById("generate-pr");
-const prInput = document.getElementById("input-pr");
-
-// モーダル開閉
-openPrModalBtn.addEventListener("click", () => {
-  prModalOverlay.style.display = "flex";
-});
-closePrModalBtn.addEventListener("click", () => {
-  prModalOverlay.style.display = "none";
-});
-
-// 自己PR用ワークフローID・APIキー（例）
-const PR_WORKFLOW_ID = "7a85b2a7-f6ea-4e9a-a314-d1cd429dd5dd";
-const PR_API_KEY = "Bearer app-VLBnOuNkP29lZj7ge6yVA5I6";
-
-generatePrButton.addEventListener("click", async () => {
-  const bulletPoints = prBulletPointsInput.value.trim();
-  if (!bulletPoints) {
-    alert("箇条書きの内容を入力してください。");
-    return;
-  }
-
-  // スピナーを付けて生成中状態に
-  generatePrButton.disabled = true;
-  generatePrButton.textContent = "生成中...";
-  const spinner = document.createElement("span");
-  spinner.classList.add("spinner");
-  generatePrButton.appendChild(spinner);
-
-  try {
-    const requestBody = {
-      workflow_id: PR_WORKFLOW_ID,
-      inputs: { text: bulletPoints },
-      user: "guest_user",
-    };
-
-    const response = await fetch("https://api.dify.ai/v1/workflows/run", {
-      method: "POST",
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: PR_API_KEY,
-      },
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        `Dify APIエラー: ${response.status} ${
-          response.statusText
-        } - ${JSON.stringify(errorData)}`
-      );
-    }
-
-    const data = await response.json();
-    console.log("自己PRレスポンス:", data);
-    const generatedText = data?.data?.outputs?.text || "生成テキストなし";
-
-    // テキストエリアに反映
-    prInput.value = generatedText;
-    // プレビュー更新
-    prInput.dispatchEvent(new Event("input"));
-
-    alert("自己PRを自動生成しました。");
-  } catch (error) {
-    console.error(error);
-    alert("エラーが発生しました(自己PR): " + error.message);
-  } finally {
-    // スピナー解除
-    generatePrButton.removeChild(spinner);
-    generatePrButton.disabled = false;
-    generatePrButton.textContent = "自己PRを自動生成";
-  }
-});
-
-/************************************************************
- * 10) ズーム機能の実装
- ************************************************************/
-const zoomInBtn = document.getElementById("zoom-in");
-const zoomOutBtn = document.getElementById("zoom-out");
-const zoomLevelEl = document.getElementById("zoom-level");
-let currentZoom = 1.0; // 初期倍率
-
-zoomInBtn.addEventListener("click", () => {
-  currentZoom += 0.1;
-  if (currentZoom > 2.0) currentZoom = 2.0; // 200%上限
-  applyZoom();
-});
-
-zoomOutBtn.addEventListener("click", () => {
-  currentZoom -= 0.1;
-  if (currentZoom < 0.5) currentZoom = 0.5; // 50%下限
-  applyZoom();
-});
-
-function applyZoom() {
-  const pages = document.querySelector(".resume-pages");
-  pages.style.transform = `scale(${currentZoom})`;
-  pages.style.transformOrigin = `top center`;
-  zoomLevelEl.textContent = Math.round(currentZoom * 100) + "%";
-}
+</script>

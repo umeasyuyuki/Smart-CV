@@ -109,7 +109,7 @@
               id="career1-duty"
               placeholder="例）接客、売場管理、スタッフ育成など"
             ></textarea>
-            <label>実績</label>
+            <label>実績(あれば記入してください。空欄でも構いません。)</label>
             <textarea
               id="career1-achievement"
               placeholder="例）前年比105%達成など"
@@ -173,6 +173,24 @@
 
         <!-- 活かせる経験・知識・技術 -->
         <div class="section-title">活かせる経験・知識・技術</div>
+        <div class="form-group" style="margin-bottom: 12px">
+          <button
+            id="open-skill-example-modal"
+            type="button"
+            style="
+              background: linear-gradient(135deg, #fa8b0c, #f6c667);
+              color: #fff;
+              border: none;
+              border-radius: 6px;
+              font-size: 0.95rem;
+              padding: 10px 18px;
+              cursor: pointer;
+              transition: background-color 0.3s, opacity 0.3s;
+            "
+          >
+            活かせる経験の例文を表示
+          </button>
+        </div>
         <textarea class="simple-textarea" id="input-skill"></textarea>
 
         <!-- 自己PR -->
@@ -196,7 +214,14 @@
             自己PRをAI入力
           </button>
         </div>
-        <textarea class="simple-textarea" id="input-pr"></textarea>
+        <textarea
+          class="simple-textarea"
+          id="input-pr"
+          placeholder="ここに自己PRを入力"
+          maxlength="300"
+        ></textarea>
+        <!-- 文字数カウンターを表示するための要素を追加 -->
+        <div id="pr-char-counter">0 / 300字</div>
 
         <!-- 利用規約 -->
         <div class="section-title">利用規約</div>
@@ -310,8 +335,8 @@
 
           <p>
             【最終更新日】2025年2月25日<br />
-            【運営者】[運営者名]<br />
-            【お問い合わせ】[問い合わせ先メールアドレス]
+            【運営社】MASTER key株式会社<br />
+            
           </p>
         </div>
         <div style="margin: 10px 0; text-align: center">
@@ -427,14 +452,34 @@
     <div id="pr-modal-overlay" class="modal-overlay">
       <div class="modal-content">
         <h2>書きたいポイントを入力してください！</h2>
-        <label for="pr-bullet-points" style="font-weight: bold"> </label>
+        <label for="pr-bullet-points" style="font-weight: bold"></label>
         <textarea
           class="simple-textarea"
           id="pr-bullet-points"
-          placeholder="自己PRのポイントを箇条書きで入力"
+          placeholder="自己PRで伝えたいことを自由に記述してください"
           rows="6"
           style="width: 100%; margin-top: 6px"
         ></textarea>
+
+        <!-- ★ ここに追加: 例文表示ボタン -->
+        <div style="margin-top: 12px; text-align: center;">
+          <button
+            id="open-pr-example-modal"
+            style="
+              background: linear-gradient(135deg, #fa8b0c, #f6c667);
+              color: #fff;
+              border: none;
+              border-radius: 6px;
+              font-size: 0.95rem;
+              padding: 10px 18px;
+              cursor: pointer;
+              transition: background-color 0.3s, opacity 0.3s;
+              margin-bottom: 10px;
+            "
+          >
+            自己PR例文を表示
+          </button>
+        </div>
 
         <!-- ボタン類 -->
         <div class="modal-buttons">
@@ -446,6 +491,154 @@
       </div>
     </div>
 
+    <!-- ▼ 新規: 自己PRの例文モーダル -->
+    <div id="pr-example-overlay" class="modal-overlay">
+      <div class="modal-content">
+        <h2>自己PRの例文サンプル</h2>
+        <div class="career-example-list">
+          <!-- 例文1 -->
+          <div class="example-block">
+            <p>
+              私は常に周囲とのコミュニケーションを大切にし、課題を早期発見して解決することを得意としています。<br />
+              前職では顧客対応の仕組みを改善し、クレーム率を20%削減しました。
+            </p>
+            <button type="button" class="use-pr-example-btn" data-example="1">
+              この例文を使用
+            </button>
+          </div>
+          <!-- 例文2 -->
+          <div class="example-block">
+            <p>
+              新人育成に注力し、教育プログラムの見直しを主導した結果、チーム全体の売上達成率が大幅に向上しました。<br />
+              成長をサポートできる環境づくりに強みがあります。
+            </p>
+            <button type="button" class="use-pr-example-btn" data-example="2">
+              この例文を使用
+            </button>
+          </div>
+          <!-- 例文3 -->
+          <div class="example-block">
+            <p>
+              数字をもとに改善策を提案できる分析力が強みです。<br />
+              店舗売上データを詳細に分析し、品揃えやレイアウトを再考したことで、客単価が○％向上しました。
+            </p>
+            <button type="button" class="use-pr-example-btn" data-example="3">
+              この例文を使用
+            </button>
+          </div>
+          <!-- 例文4 -->
+          <div class="example-block">
+            <p>
+              スケジュールやタスクを整理し、複数案件を同時に管理するのが得意です。<br />
+              急な仕様変更にも柔軟に対応し、納期を守りつつ高品質を維持できました。
+            </p>
+            <button type="button" class="use-pr-example-btn" data-example="4">
+              この例文を使用
+            </button>
+          </div>
+          <!-- 例文5 -->
+          <div class="example-block">
+            <p>
+              リーダーシップを発揮し、メンバーのモチベーションを高めながら目標を達成することを重視しています。<br />
+              チームビルディングに関わる中で、個々の成長と成果を両立させました。
+            </p>
+            <button type="button" class="use-pr-example-btn" data-example="5">
+              この例文を使用
+            </button>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button
+            id="close-pr-example-modal"
+            type="button"
+            class="modal-close-btn"
+          >
+            閉じる
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- /pr-example-overlay -->
+
+
+    <!-- 「活かせる経験・知識・技術」例文モーダル -->
+    <div id="skill-example-overlay" class="modal-overlay">
+      <div class="modal-content">
+        <h2>活かせる経験・知識・技術 例文サンプル</h2>
+        <div class="career-example-list">
+          <!-- 例文1 -->
+          <div class="example-block">
+            <p>
+              ・顧客との折衝・交渉をスムーズに進めるコミュニケーションスキル<br />
+              ・クレーム対応などトラブル発生時の冷静かつ迅速な対処<br />
+              ・リピーター獲得につながる顧客満足度向上施策の実践
+            </p>
+            <button type="button" class="use-skill-btn" data-example="1">
+              この例文を使用
+            </button>
+          </div>
+
+          <!-- 例文2 -->
+          <div class="example-block">
+            <p>
+              ・チームをまとめるリーダーシップおよびモチベーション管理<br />
+              ・具体的な目標設定と進捗管理によるプロジェクトの円滑推進<br />
+              ・新メンバーの早期育成と業務のスムーズな引き継ぎ
+            </p>
+            <button type="button" class="use-skill-btn" data-example="2">
+              この例文を使用
+            </button>
+          </div>
+
+          <!-- 例文3 -->
+          <div class="example-block">
+            <p>
+              ・ExcelやBIツールを活用したデータ分析とレポーティング<br />
+              ・売上やコストの可視化と、課題の抽出・改善策の提案<br />
+              ・業務を自動化するVBAやスクリプトの作成経験
+            </p>
+            <button type="button" class="use-skill-btn" data-example="3">
+              この例文を使用
+            </button>
+          </div>
+
+          <!-- 例文4 -->
+          <div class="example-block">
+            <p>
+              ・複数案件を同時進行するマルチタスクスキル<br />
+              ・納期遵守のためのタスク優先度設定とスケジュール調整<br />
+              ・突発的な要望や変更点に柔軟に対応しつつ全体最適を図る能力
+            </p>
+            <button type="button" class="use-skill-btn" data-example="4">
+              この例文を使用
+            </button>
+          </div>
+
+          <!-- 例文5 -->
+          <div class="example-block">
+            <p>
+              ・コスト削減や効率化を目指す業務フロー改善<br />
+              ・現場の声を反映した業務マニュアル整備と継続的な運用<br />
+              ・部署横断での情報共有・連携を促進し、生産性向上を実現
+            </p>
+            <button type="button" class="use-skill-btn" data-example="5">
+              この例文を使用
+            </button>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button
+            id="close-skill-modal"
+            type="button"
+            class="modal-close-btn"
+          >
+            閉じる
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- /skill-example-overlay -->
+     
     <!-- ==================== ここからJSをまとめて埋め込み ==================== -->
     <!-- ◆ 外部JavaScriptファイルを読み込むよう変更 -->
     <script src="syokumu.js"></script>

@@ -97,69 +97,6 @@ body {
   margin-top: 8px;
 }
 
-/* 選択ガイド */
-.choice-box {
-  display: block;
-  background-color: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
-  margin: 0 auto 20px;
-  padding: 16px;
-  text-align: left;
-  font-size: 16px;
-  color: #333;
-  max-width: 90%;
-}
-.first-box,
-.second-box {
-  display: block;
-  background-color: #ffffff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  margin: 0 auto 20px;
-  padding: 16px;
-  text-align: center;
-  font-size: 18px;
-  color: #333;
-  max-width: 90%;
-}
-
-/* アップロード */
-.upload-wrapper {
-  margin-bottom: 20px;
-  margin-left: 0;
-  width: 100%;
-}
-.upload-label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 8px;
-  font-size: 15px;
-}
-.upload-area {
-  border: 2px dashed #ccc;
-  border-radius: 6px;
-  padding: 20px;
-  cursor: pointer;
-  transition: border-color 0.3s, background-color 0.3s;
-  height: 110px;
-  text-align: center;
-  margin: 0 auto;
-  max-width: 90%;
-  background-color: #fafafa;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.upload-text {
-  color: #888;
-  font-size: 0.9rem;
-}
-.upload-area:hover {
-  border-color: #aaa;
-  background-color: #f8f8f8;
-}
-
 /* セクション見出し */
 .section-title {
   margin-top: 25px;
@@ -217,48 +154,6 @@ label {
   font-weight: bold;
   transition: background-color 0.2s, border-color 0.2s;
 }
-/* 一括生成ボタンを中央配置＆大きく */
-#bulk-generate-btn {
-  display: block;
-  margin: 20px auto;
-  background-color: #007bff;
-  color: #fff;
-  border-color: #007bff;
-  font-size: 1rem;
-  padding: 12px 24px;
-}
-#bulk-generate-btn:hover {
-  background-color: #0056b3;
-  border-color: #0056b3;
-}
-
-/* 追加・削除ボタン */
-#add-career-row,
-#add-license-row,
-#add-lang-row {
-  background-color: #007bff;
-  color: #fff;
-  border-color: #007bff;
-}
-#add-career-row:hover,
-#add-license-row:hover,
-#add-lang-row:hover {
-  background-color: #0056b3;
-  border-color: #0056b3;
-}
-#remove-career-row,
-#remove-license-row,
-#remove-lang-row {
-  background-color: #dc3545;
-  color: #fff;
-  border-color: #dc3545;
-}
-#remove-career-row:hover,
-#remove-license-row:hover,
-#remove-lang-row:hover {
-  background-color: #c82333;
-  border-color: #bd2130;
-}
 
 /* PDFダウンロードボタン */
 #download-pdf {
@@ -298,7 +193,6 @@ label {
   text-align: center;
   margin-bottom: 1em;
 }
-/* ★ おしゃれに変更 ★ */
 .zoom-controls button {
   font-size: 0.9rem;
   padding: 6px 14px;
@@ -307,7 +201,6 @@ label {
   cursor: pointer;
   border: none;
   font-weight: bold;
-  /* おしゃれなグラデーションに変更 */
   background: linear-gradient(135deg, #42a5f5, #478ed1);
   color: #fff;
   transition: transform 0.2s, opacity 0.2s;
@@ -422,7 +315,7 @@ label {
   }
 }
 
-/* 自己PR自動生成ボタンをよりおしゃれに */
+/* 自己PR自動生成ボタン */
 #generate-pr {
   background: linear-gradient(135deg, #42a5f5, #478ed1);
   color: #fff;
@@ -493,26 +386,6 @@ label {
   text-align: center;
 }
 
-/* ★ おしゃれに変更した「この例文を使用」ボタン ★ */
-.use-summary-btn,
-.use-example-btn {
-  background: linear-gradient(135deg, #fa8b0c, #f6c667);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  transition: transform 0.3s, opacity 0.3s;
-  /* ちょっとした影 */
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
-}
-.use-summary-btn:hover,
-.use-example-btn:hover {
-  transform: scale(1.05);
-  opacity: 0.9;
-}
-
 /* 職務経歴 例文モーダル */
 .career-example-list {
   margin-top: 12px;
@@ -526,4 +399,74 @@ label {
 .example-block p {
   font-size: 0.9rem;
   margin-bottom: 6px;
+}
+
+/* 例文使用ボタン */
+.use-summary-btn,
+.use-example-btn,
+.use-skill-btn,
+.use-pr-example-btn {
+  background: linear-gradient(135deg, #fa8b0c, #f6c667);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  transition: transform 0.3s, opacity 0.3s;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
+}
+.use-summary-btn:hover,
+.use-example-btn:hover,
+.use-skill-btn:hover,
+.use-pr-example-btn:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+/* 自己PRの文字数カウンター */
+#pr-char-counter {
+  font-size: 0.85rem;
+  color: #666;
+  text-align: right;
+  margin-top: -5px;
+}
+
+/* --- 職務経歴, 免許・資格, 語学の追加・削除ボタンをシンプルにする --- */
+
+/* 追加ボタン */
+#add-career-row,
+#add-license-row,
+#add-lang-row {
+  /* サイズ（paddingなど）は .btn-group に既に指定されているので変更しない */
+  background-color: #007bff;     /* シンプルなブルー */
+  border: 1px solid #007bff;    /* ボーダーも同色 */
+  color: #fff;                  /* 文字色を白に */
+  border-radius: 20px;          /* 既存radiusを活かす */
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+#add-career-row:hover,
+#add-license-row:hover,
+#add-lang-row:hover {
+  background-color: #0056b3;    /* ホバー時は濃いめのブルー */
+  opacity: 0.9;                 /* ほんの少し暗くなる */
+}
+
+/* 削除ボタン */
+#remove-career-row,
+#remove-license-row,
+#remove-lang-row {
+  background-color: #dc3545;    /* シンプルなレッド */
+  border: 1px solid #dc3545;
+  color: #fff;
+  border-radius: 20px;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+#remove-career-row:hover,
+#remove-license-row:hover,
+#remove-lang-row:hover {
+  background-color: #c82333;    /* ホバー時は濃いめのレッド */
+  opacity: 0.9;
 }
